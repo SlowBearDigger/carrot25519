@@ -11,9 +11,15 @@ option(CARROT25519_PORTABLE_ONLY "Disable optimized backends" OFF)
 
 string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" carrot25519_processor)
 set(CARROT25519_TARGET_ARM64 OFF)
-if(NOT CARROT25519_PORTABLE_ONLY AND
-   carrot25519_processor MATCHES "^(arm64|aarch64)$")
-  set(CARROT25519_TARGET_ARM64 ON)
+set(CARROT25519_TARGET_X86_64 OFF)
+if(NOT CARROT25519_PORTABLE_ONLY)
+  if(APPLE AND CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+    set(CARROT25519_TARGET_X86_64 ON)
+  elseif(carrot25519_processor MATCHES "^(arm64|aarch64)$")
+    set(CARROT25519_TARGET_ARM64 ON)
+  elseif(carrot25519_processor MATCHES "^(x86_64|amd64)$")
+    set(CARROT25519_TARGET_X86_64 ON)
+  endif()
 endif()
 
 function(carrot25519_strict_warnings target)
@@ -109,6 +115,18 @@ if(CARROT25519_BUILD_TESTS)
     add_test(
       NAME arm64_disassembly
       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_arm64_disassembly.sh
+              $<TARGET_FILE:carrot25519>)
+  endif()
+
+  if(CARROT25519_TARGET_X86_64)
+    add_executable(carrot25519_x86_64_dispatch_test tests/dispatch_test.c)
+    target_include_directories(carrot25519_x86_64_dispatch_test PRIVATE src)
+    target_link_libraries(carrot25519_x86_64_dispatch_test PRIVATE carrot25519)
+    carrot25519_strict_warnings(carrot25519_x86_64_dispatch_test)
+    add_test(NAME x86_64_dispatch COMMAND carrot25519_x86_64_dispatch_test)
+    add_test(
+      NAME x86_64_disassembly
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_x86_64_disassembly.sh
               $<TARGET_FILE:carrot25519>)
   endif()
 endif()
