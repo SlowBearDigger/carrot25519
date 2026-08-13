@@ -93,6 +93,7 @@ install(FILES
 
 if(CARROT25519_BUILD_TESTS)
   enable_testing()
+  enable_language(CXX)
 
   add_executable(carrot25519_api_contract_test tests/api_contract_test.c)
   target_link_libraries(carrot25519_api_contract_test PRIVATE carrot25519)
@@ -123,6 +124,22 @@ if(CARROT25519_BUILD_TESTS)
       PRIVATE CARROT25519_TEST_EXPECT_X86_64=1)
   endif()
   add_test(NAME backend_matrix COMMAND carrot25519_backend_matrix_test)
+
+  add_executable(
+    carrot25519_carrot_convergence_test tests/carrot_convergence_test.c)
+  target_link_libraries(carrot25519_carrot_convergence_test PRIVATE carrot25519)
+  carrot25519_strict_warnings(carrot25519_carrot_convergence_test)
+  add_test(NAME carrot_convergence COMMAND carrot25519_carrot_convergence_test)
+
+  add_executable(
+    carrot25519_monero_wrapper_compat_test
+    tests/monero_wrapper_compat_test.cpp)
+  target_compile_features(carrot25519_monero_wrapper_compat_test
+    PRIVATE cxx_std_17)
+  target_link_libraries(carrot25519_monero_wrapper_compat_test
+    PRIVATE carrot25519)
+  carrot25519_strict_warnings(carrot25519_monero_wrapper_compat_test)
+  add_test(NAME monero_wrapper COMMAND carrot25519_monero_wrapper_compat_test)
 
   if(CARROT25519_TARGET_ARM64 AND UNIX)
     add_executable(carrot25519_arm64_guard_page_test tests/guard_page_test.c)
