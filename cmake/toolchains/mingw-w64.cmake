@@ -1,0 +1,7 @@
+set(CMAKE_SYSTEM_NAME Windows)
+
+find_program(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc REQUIRED)
+find_program(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++ REQUIRED)
+find_program(CMAKE_RC_COMPILER x86_64-w64-mingw32-windres REQUIRED)
+
+set(CARROT25519_PORTABLE_ONLY ON CACHE BOOL "" FORCE)

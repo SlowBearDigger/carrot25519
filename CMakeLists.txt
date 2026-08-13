@@ -141,6 +141,15 @@ if(CARROT25519_BUILD_TESTS)
   carrot25519_strict_warnings(carrot25519_monero_wrapper_compat_test)
   add_test(NAME monero_wrapper COMMAND carrot25519_monero_wrapper_compat_test)
 
+  add_test(
+    NAME install_consumer
+    COMMAND ${CMAKE_COMMAND}
+      -DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+      -DPROJECT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+      -DCMAKE_EXECUTABLE=${CMAKE_COMMAND}
+      -DCTEST_EXECUTABLE=${CMAKE_CTEST_COMMAND}
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/install_test.cmake)
+
   if(CARROT25519_TARGET_ARM64 AND UNIX)
     add_executable(carrot25519_arm64_guard_page_test tests/guard_page_test.c)
     target_compile_definitions(carrot25519_arm64_guard_page_test
