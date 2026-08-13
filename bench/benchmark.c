@@ -108,8 +108,8 @@ static void prepare_inputs(
 
 static void run_operation(
     const carrot25519_impl *impl, int use_point, uint64_t iterations,
-    size_t trial, const uint8_t scalars[POOL_SIZE][32],
-    const uint8_t points[POOL_SIZE][32], uint8_t *sink)
+    size_t trial, uint8_t scalars[POOL_SIZE][32],
+    uint8_t points[POOL_SIZE][32], uint8_t *sink)
 {
     uint8_t output[32];
     for (uint64_t iteration = 0; iteration < iterations; ++iteration)
@@ -127,8 +127,8 @@ static void run_operation(
 
 static int measure(
     measurement *result, uint64_t iterations, size_t trials,
-    const uint8_t scalars[POOL_SIZE][32],
-    const uint8_t points[POOL_SIZE][32])
+    uint8_t scalars[POOL_SIZE][32],
+    uint8_t points[POOL_SIZE][32])
 {
     uint8_t sink = 0;
     const int use_point = strcmp(result->operation, "point") == 0;

@@ -76,6 +76,22 @@ def main() -> None:
     ):
         if required not in ci:
             fail(f"CI matrix is missing {required}")
+
+    blocks = dict(job_blocks(ci))
+    linux_x86 = blocks.get("linux-x86-64", "")
+    linux_arm = blocks.get("linux-arm64", "")
+    if "CARROT25519_BUILD_BENCHMARKS=ON" not in linux_x86:
+        fail("Linux x86_64 CI does not compile the benchmark")
+    for required in (
+        "mode: release",
+        "mode: asan",
+        "mode: ubsan",
+        "fsanitize=address",
+        "fsanitize=undefined",
+        "CARROT25519_BUILD_BENCHMARKS=ON",
+    ):
+        if required not in linux_arm:
+            fail(f"Linux ARM64 CI is missing {required}")
     print("workflow_policy=pass")
 
 

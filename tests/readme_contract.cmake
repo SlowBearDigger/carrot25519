@@ -14,6 +14,8 @@ foreach(required IN ITEMS
     "portable"
     "ARM64"
     "x86_64"
+    "Local Linux AArch64 VM"
+    "Bare-metal Linux AArch64"
     "CARROT"
     "MIT"
     "CC0-1.0"

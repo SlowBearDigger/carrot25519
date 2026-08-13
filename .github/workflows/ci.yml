@@ -46,6 +46,7 @@ jobs:
           esac
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
             -DCARROT25519_BUILD_TESTS=ON \
+            -DCARROT25519_BUILD_BENCHMARKS=ON \
             "-DCMAKE_C_FLAGS=${flags}" "-DCMAKE_CXX_FLAGS=${flags}" \
             "-DCMAKE_EXE_LINKER_FLAGS=${flags}"
       - name: Build
@@ -67,6 +68,13 @@ jobs:
   linux-arm64:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: release
+          - mode: asan
+          - mode: ubsan
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -74,11 +82,32 @@ jobs:
       - name: Require native ARM64
         run: test "$(uname -m)" = aarch64
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCARROT25519_BUILD_TESTS=ON
+        shell: bash
+        run: |
+          case "${{ matrix.mode }}" in
+            release) flags= ;;
+            asan) flags='-O1 -g -fno-omit-frame-pointer -fsanitize=address' ;;
+            ubsan) flags='-O1 -g -fno-omit-frame-pointer -fsanitize=undefined' ;;
+          esac
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCARROT25519_BUILD_TESTS=ON \
+            -DCARROT25519_BUILD_BENCHMARKS=ON \
+            "-DCMAKE_C_FLAGS=${flags}" "-DCMAKE_CXX_FLAGS=${flags}" \
+            "-DCMAKE_EXE_LINKER_FLAGS=${flags}"
       - name: Build
         run: cmake --build build --parallel 4
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        shell: bash
+        run: |
+          export ASAN_OPTIONS=detect_leaks=0:halt_on_error=1
+          export UBSAN_OPTIONS=halt_on_error=1
+          if test "${{ matrix.mode }}" = release; then
+            ctest --test-dir build --output-on-failure
+          else
+            ctest --test-dir build \
+              -E '^(install_consumer|carrot_convergence)$' \
+              --output-on-failure
+          fi
 
   macos-arm64:
     runs-on: macos-15

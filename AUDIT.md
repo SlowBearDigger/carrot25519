@@ -147,9 +147,12 @@ The following are outside this primitive and require separate review:
 - Provenance checks pin every vendored cryptographic source and the corpus.
 - macOS ARM64 has local release, ASan, UBSan, CFI, install, consumer, and
   benchmark evidence.
+- A Local Linux AArch64 VM using Colima/VZ on Apple ARM64 and GCC 13.3 has
+  release, ASan, UBSan, guard-page, ELF disassembly, install, and consumer
+  evidence.
 
 Native Linux x86_64 release, sanitizer, and benchmark evidence remains pending.
-Native Linux AArch64 execution remains pending. Windows currently exercises
+Bare-metal Linux AArch64 execution remains pending. Windows currently exercises
 only the portable backend through the repository CI definition.
 
 ## Known limitations

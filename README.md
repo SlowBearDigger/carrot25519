@@ -104,6 +104,9 @@ informational and never decide correctness.
   small-order cases.
 - macOS ARM64 passes release, ASan, UBSan, guard-page, disassembly, CFI, install,
   and consumer tests.
+- A Local Linux AArch64 VM using Colima/VZ on Apple ARM64 and GCC 13.3 passes
+  release, ASan, UBSan, guard-page, ELF disassembly, install, and consumer
+  tests. Bare-metal Linux AArch64 qualification remains pending.
 - Both x86_64 tiers pass the complete corpus, convergence, dispatch, guard-page,
   disassembly, and UBSan gates under Linux x86_64 emulation. Native Linux
   qualification remains pending.
