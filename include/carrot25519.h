@@ -5,6 +5,11 @@
 
 #include <stdint.h>
 
+#define CARROT25519_VERSION_MAJOR 0
+#define CARROT25519_VERSION_MINOR 1
+#define CARROT25519_VERSION_PATCH 0
+#define CARROT25519_VERSION_STRING "0.1.0"
+
 #if defined(__GNUC__) || defined(__clang__)
 #define CARROT25519_API __attribute__((visibility("default")))
 #else

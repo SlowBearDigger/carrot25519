@@ -5,11 +5,19 @@
 #include <stdint.h>
 #include <string.h>
 
+#if CARROT25519_VERSION_MAJOR != 0 || CARROT25519_VERSION_MINOR != 1 || \
+    CARROT25519_VERSION_PATCH != 0
+#error "unexpected carrot25519 API version"
+#endif
+
 int main(void)
 {
     static const uint8_t scalar_one[32] = {1};
     static const uint8_t basepoint[32] = {9};
     uint8_t output[32];
+
+    if (strcmp(CARROT25519_VERSION_STRING, "0.1.0") != 0)
+        return 1;
 
     const carrot25519_impl *automatic =
         carrot25519_select_impl(CARROT25519_IMPL_AUTO);

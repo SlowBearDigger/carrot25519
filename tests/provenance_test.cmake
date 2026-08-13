@@ -3,6 +3,7 @@ if(NOT DEFINED PROJECT_ROOT)
 endif()
 
 set(required_files
+  AUDIT.md
   LICENSE
   README.md
   SECURITY.md
@@ -10,7 +11,8 @@ set(required_files
   licenses/CC0-1.0.txt
   licenses/MIT-FIAT.txt
   licenses/MIT-0-S2N.txt
-  licenses/NOTICE-S2N.txt)
+  licenses/NOTICE-S2N.txt
+  tools/review.sh)
 
 foreach(path IN LISTS required_files)
   if(NOT EXISTS "${PROJECT_ROOT}/${path}")

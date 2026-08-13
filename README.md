@@ -4,6 +4,9 @@ carrot25519 is an experimental, allocation-free C11 primitive for the raw
 Montgomery scalar multiplication used by CARROT.
 It is not audited and is not production-ready.
 
+The current pre-1.0 byte API version is `0.1.0`. See [AUDIT.md](AUDIT.md) for
+the security boundary, open qualification gates, and review questions.
+
 ## Byte contract
 
 - Scalars and points are 32-byte little-endian values.

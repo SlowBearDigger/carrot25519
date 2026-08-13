@@ -133,6 +133,10 @@ if(CARROT25519_BUILD_TESTS)
     NAME readme_contract
     COMMAND ${CMAKE_COMMAND} -DPROJECT_ROOT=${CMAKE_CURRENT_SOURCE_DIR}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/readme_contract.cmake)
+  add_test(
+    NAME audit_packet
+    COMMAND ${CMAKE_COMMAND} -DPROJECT_ROOT=${CMAKE_CURRENT_SOURCE_DIR}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/audit_packet_test.cmake)
 
   add_executable(carrot25519_backend_matrix_test tests/backend_matrix_test.c)
   target_link_libraries(carrot25519_backend_matrix_test PRIVATE carrot25519)
