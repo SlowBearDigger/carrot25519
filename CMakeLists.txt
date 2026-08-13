@@ -17,7 +17,7 @@ if(NOT CARROT25519_PORTABLE_ONLY)
     set(CARROT25519_TARGET_X86_64 ON)
   elseif(carrot25519_processor MATCHES "^(arm64|aarch64)$")
     set(CARROT25519_TARGET_ARM64 ON)
-  elseif(carrot25519_processor MATCHES "^(x86_64|amd64)$")
+  elseif(UNIX AND carrot25519_processor MATCHES "^(x86_64|amd64)$")
     set(CARROT25519_TARGET_X86_64 ON)
   endif()
 endif()
@@ -53,6 +53,21 @@ if(CARROT25519_TARGET_ARM64)
     src/arm64/arm64.c
     src/arm64/x25519_aarch64.S)
   target_compile_definitions(carrot25519 PRIVATE CARROT25519_HAVE_ARM64=1)
+endif()
+
+if(CARROT25519_TARGET_X86_64)
+  target_sources(carrot25519 PRIVATE
+    src/x86_64/x86_64.c
+    src/x86_64/s2n/curve25519_pxscalarmul.S
+    src/x86_64/s2n/curve25519_pxscalarmul_alt.S
+    src/x86_64/s2n/bignum_inv_p25519.S
+    src/x86_64/s2n/bignum_mod_p25519_4.S
+    src/x86_64/s2n/bignum_mul_p25519.S
+    src/x86_64/s2n/bignum_mul_p25519_alt.S)
+  target_include_directories(carrot25519 PRIVATE src/x86_64/s2n)
+  target_compile_definitions(carrot25519 PRIVATE
+    CARROT25519_HAVE_X86_64=1
+    S2N_BN_HIDE_SYMBOLS=1)
 endif()
 
 install(TARGETS carrot25519
@@ -103,6 +118,10 @@ if(CARROT25519_BUILD_TESTS)
     target_compile_definitions(carrot25519_backend_matrix_test
       PRIVATE CARROT25519_TEST_EXPECT_ARM64=1)
   endif()
+  if(CARROT25519_TARGET_X86_64)
+    target_compile_definitions(carrot25519_backend_matrix_test
+      PRIVATE CARROT25519_TEST_EXPECT_X86_64=1)
+  endif()
   add_test(NAME backend_matrix COMMAND carrot25519_backend_matrix_test)
 
   if(CARROT25519_TARGET_ARM64 AND UNIX)
@@ -124,6 +143,15 @@ if(CARROT25519_BUILD_TESTS)
     target_link_libraries(carrot25519_x86_64_dispatch_test PRIVATE carrot25519)
     carrot25519_strict_warnings(carrot25519_x86_64_dispatch_test)
     add_test(NAME x86_64_dispatch COMMAND carrot25519_x86_64_dispatch_test)
+    if(UNIX)
+      add_executable(carrot25519_x86_64_guard_page_test tests/guard_page_test.c)
+      target_compile_definitions(carrot25519_x86_64_guard_page_test
+        PRIVATE CARROT25519_TEST_IMPL_ID=CARROT25519_IMPL_X86_64_BASELINE)
+      target_link_libraries(carrot25519_x86_64_guard_page_test
+        PRIVATE carrot25519)
+      carrot25519_strict_warnings(carrot25519_x86_64_guard_page_test)
+      add_test(NAME x86_64_guard_pages COMMAND carrot25519_x86_64_guard_page_test)
+    endif()
     add_test(
       NAME x86_64_disassembly
       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_x86_64_disassembly.sh

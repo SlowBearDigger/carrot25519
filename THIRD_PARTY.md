@@ -49,3 +49,6 @@ original CC0 notice remains in the source.
 
 The selected files retain their Amazon copyright and license identifiers. The
 normal build uses only vendored sources and does not download dependencies.
+The wrapper composes the projective multiplication, reduction, inversion, and
+field multiplication primitives. It clears its own temporary buffers, but the
+unmodified assembly frames are not cleared.

@@ -24,5 +24,14 @@ int main(void)
         return 1;
 #endif
 
+#if defined(CARROT25519_TEST_EXPECT_X86_64)
+    if (carrot25519_select_impl(CARROT25519_IMPL_X86_64_BASELINE) == NULL)
+        return 1;
+#else
+    if (carrot25519_select_impl(CARROT25519_IMPL_X86_64_BASELINE) != NULL ||
+        carrot25519_select_impl(CARROT25519_IMPL_X86_64_BMI2_ADX) != NULL)
+        return 1;
+#endif
+
     return 0;
 }

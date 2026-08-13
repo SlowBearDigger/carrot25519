@@ -51,6 +51,15 @@ endforeach()
 set(pinned_files
   "src/portable/fiat/curve25519_64.c|645233c37707ba0580338aa84d8380357078a2c9bb2db80f0c5ff4e979650e3e"
   "src/arm64/x25519_aarch64.S|9c4814e489a2b1961867778beb139373d57c6d7a7102916f671d0b2cb668d04d"
+  "src/x86_64/s2n/_internal_s2n_bignum.h|af14486ec593c27670bfa7cb74057e2116b1cf8d9945cc2bdc736b61f2accc96"
+  "src/x86_64/s2n/_internal_s2n_bignum_x86.h|32e93f25e504f9aef6d16250e4eaf0e6214ca00c6312d44d909d6be13a0c249d"
+  "src/x86_64/s2n/s2n-bignum.h|949d80230b3a831187e52925d9f3b0479084072dc9a05657ca340d4daea070c9"
+  "src/x86_64/s2n/curve25519_pxscalarmul.S|abe6ceed71920248f01d2d98b9676d2d307cf85f563ca1bf075dafc116c2dd62"
+  "src/x86_64/s2n/curve25519_pxscalarmul_alt.S|7ae6abca234cdbf6fd388cd661d64028fbe0b65158be7be2e9d39080542b11eb"
+  "src/x86_64/s2n/bignum_inv_p25519.S|62e6957a927857a63bb0e705ad96d7ca9c7693c482a7d83621ac619dd24c2430"
+  "src/x86_64/s2n/bignum_mod_p25519_4.S|cca0ae2bb193643b0fc42918d007eeb0d93e4aeaed9a843da35ef77aca3ee818"
+  "src/x86_64/s2n/bignum_mul_p25519.S|18e3ee6bd465dc22bf151a20575d7194428e995b556e56552d8ed977e853b672"
+  "src/x86_64/s2n/bignum_mul_p25519_alt.S|03c8c03f44cf34b702c4010ebbdde9338926273e311e312e7299e4c173f566ab"
   "tests/vectors.tsv|2ca612e3879cd8bd2f85e7baae54bb29be4aef5b0f7eb2c4ab94523b3f498ac1")
 foreach(binding IN LISTS pinned_files)
   string(REPLACE "|" ";" fields "${binding}")
