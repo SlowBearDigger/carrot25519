@@ -48,4 +48,20 @@ foreach(pin IN ITEMS
   endif()
 endforeach()
 
+set(pinned_files
+  "src/portable/fiat/curve25519_64.c|645233c37707ba0580338aa84d8380357078a2c9bb2db80f0c5ff4e979650e3e"
+  "tests/vectors.tsv|2ca612e3879cd8bd2f85e7baae54bb29be4aef5b0f7eb2c4ab94523b3f498ac1")
+foreach(binding IN LISTS pinned_files)
+  string(REPLACE "|" ";" fields "${binding}")
+  list(GET fields 0 path)
+  list(GET fields 1 expected_sha256)
+  if(NOT EXISTS "${PROJECT_ROOT}/${path}")
+    message(FATAL_ERROR "missing pinned file: ${path}")
+  endif()
+  file(SHA256 "${PROJECT_ROOT}/${path}" actual_sha256)
+  if(NOT actual_sha256 STREQUAL expected_sha256)
+    message(FATAL_ERROR "pinned file mismatch: ${path}")
+  endif()
+endforeach()
+
 message(STATUS "provenance check passed")

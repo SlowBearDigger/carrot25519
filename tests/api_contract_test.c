@@ -16,7 +16,12 @@ int main(void)
     const carrot25519_impl *portable =
         carrot25519_select_impl(CARROT25519_IMPL_PORTABLE);
 
-    if (automatic == NULL || portable == NULL || automatic != portable)
+    if (automatic == NULL || portable == NULL)
+        return 1;
+    const carrot25519_impl_id automatic_id =
+        carrot25519_impl_id_of(automatic);
+    if (automatic_id == CARROT25519_IMPL_AUTO ||
+        automatic != carrot25519_select_impl(automatic_id))
         return 1;
     if (portable != carrot25519_select_impl(CARROT25519_IMPL_PORTABLE))
         return 1;
