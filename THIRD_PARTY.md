@@ -22,6 +22,7 @@ The generated field arithmetic is vendored without local edits.
 - License: CC0-1.0
 - Legal code: `licenses/CC0-1.0.txt`
 - Vendored path: `src/arm64/x25519_aarch64.S`
+- Adapted source SHA-256: `9c4814e489a2b1961867778beb139373d57c6d7a7102916f671d0b2cb668d04d`
 
 The assembly is adapted for the raw CARROT scalar contract, Mach-O and ELF
 integration, unaligned output stores, and local scratch-frame clearing. The

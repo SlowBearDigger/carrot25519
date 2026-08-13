@@ -42,6 +42,13 @@ set_target_properties(carrot25519 PROPERTIES
 
 carrot25519_strict_warnings(carrot25519)
 
+if(CARROT25519_TARGET_ARM64)
+  target_sources(carrot25519 PRIVATE
+    src/arm64/arm64.c
+    src/arm64/x25519_aarch64.S)
+  target_compile_definitions(carrot25519 PRIVATE CARROT25519_HAVE_ARM64=1)
+endif()
+
 install(TARGETS carrot25519
   EXPORT carrot25519Targets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})

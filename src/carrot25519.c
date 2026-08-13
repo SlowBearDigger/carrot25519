@@ -10,9 +10,19 @@ const carrot25519_impl *carrot25519_select_impl(
     switch (requested)
     {
     case CARROT25519_IMPL_AUTO:
+#if defined(CARROT25519_HAVE_ARM64)
+        return &carrot25519_arm64_impl;
+#else
+        return &carrot25519_portable_impl;
+#endif
     case CARROT25519_IMPL_PORTABLE:
         return &carrot25519_portable_impl;
     case CARROT25519_IMPL_ARM64:
+#if defined(CARROT25519_HAVE_ARM64)
+        return &carrot25519_arm64_impl;
+#else
+        return NULL;
+#endif
     case CARROT25519_IMPL_X86_64_BASELINE:
     case CARROT25519_IMPL_X86_64_BMI2_ADX:
     default:

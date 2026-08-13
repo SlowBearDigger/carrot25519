@@ -21,6 +21,9 @@ struct carrot25519_impl {
 };
 
 extern const carrot25519_impl carrot25519_portable_impl;
+#if defined(CARROT25519_HAVE_ARM64)
+extern const carrot25519_impl carrot25519_arm64_impl;
+#endif
 
 void carrot25519_secure_zero(void *memory, size_t length);
 

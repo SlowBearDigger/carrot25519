@@ -50,6 +50,7 @@ endforeach()
 
 set(pinned_files
   "src/portable/fiat/curve25519_64.c|645233c37707ba0580338aa84d8380357078a2c9bb2db80f0c5ff4e979650e3e"
+  "src/arm64/x25519_aarch64.S|9c4814e489a2b1961867778beb139373d57c6d7a7102916f671d0b2cb668d04d"
   "tests/vectors.tsv|2ca612e3879cd8bd2f85e7baae54bb29be4aef5b0f7eb2c4ab94523b3f498ac1")
 foreach(binding IN LISTS pinned_files)
   string(REPLACE "|" ";" fields "${binding}")

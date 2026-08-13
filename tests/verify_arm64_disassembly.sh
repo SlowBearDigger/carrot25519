@@ -23,6 +23,7 @@ esac
 case "$(uname -s)" in
   Darwin)
     nm -m "$1" | grep -q 'private external _carrot25519_arm64_scalarmult'
+    xcrun dwarfdump --eh-frame "$1" | grep -Fq 'CFA=W29+160'
     ;;
 esac
 
