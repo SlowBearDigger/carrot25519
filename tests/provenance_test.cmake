@@ -4,6 +4,7 @@ endif()
 
 set(required_files
   LICENSE
+  README.md
   SECURITY.md
   THIRD_PARTY.md
   licenses/CC0-1.0.txt
