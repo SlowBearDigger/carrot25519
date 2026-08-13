@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-x86-64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: gcc
+            mode: release
+          - compiler: clang
+            mode: release
+          - compiler: clang
+            mode: asan
+          - compiler: clang
+            mode: ubsan
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Configure
+        shell: bash
+        run: |
+          case "${{ matrix.compiler }}" in
+            gcc) export CC=gcc CXX=g++ ;;
+            clang) export CC=clang CXX=clang++ ;;
+          esac
+          case "${{ matrix.mode }}" in
+            release) flags= ;;
+            asan) flags='-O1 -g -fno-omit-frame-pointer -fsanitize=address' ;;
+            ubsan) flags='-O1 -g -fno-omit-frame-pointer -fsanitize=undefined' ;;
+          esac
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCARROT25519_BUILD_TESTS=ON \
+            "-DCMAKE_C_FLAGS=${flags}" "-DCMAKE_CXX_FLAGS=${flags}" \
+            "-DCMAKE_EXE_LINKER_FLAGS=${flags}"
+      - name: Build
+        run: cmake --build build --parallel 4
+      - name: Test
+        shell: bash
+        run: |
+          export ASAN_OPTIONS=detect_leaks=0:halt_on_error=1
+          export UBSAN_OPTIONS=halt_on_error=1
+          if test "${{ matrix.mode }}" = release; then
+            ctest --test-dir build --output-on-failure
+          else
+            ctest --test-dir build -E '^install_consumer$' --output-on-failure
+          fi
+      - name: Workflow policy
+        if: matrix.compiler == 'gcc' && matrix.mode == 'release'
+        run: python3 tests/workflow_policy_test.py
+
+  linux-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Require native ARM64
+        run: test "$(uname -m)" = aarch64
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCARROT25519_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build --parallel 4
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  macos-arm64:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Require native ARM64
+        run: test "$(uname -m)" = arm64
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCARROT25519_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build --parallel 4
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  windows-portable:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake -S . -B build -DCARROT25519_BUILD_TESTS=ON -DCARROT25519_PORTABLE_ONLY=ON
+      - name: Build
+        run: cmake --build build --config Release --parallel 4
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure

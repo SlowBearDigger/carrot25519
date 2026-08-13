@@ -1,0 +1,41 @@
+name: Native benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - macos-15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Configure
+        run: cmake -S . -B build-bench -DCMAKE_BUILD_TYPE=Release -DCARROT25519_BUILD_BENCHMARKS=ON
+      - name: Build
+        run: cmake --build build-bench --parallel 4
+      - name: Benchmark
+        shell: bash
+        run: ./bench/run-local.sh --iterations 5000 --trials 7 --output "benchmark-${RUNNER_OS}-${RUNNER_ARCH}.txt"
+      - name: Upload result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: benchmark-${{ runner.os }}-${{ runner.arch }}
+          path: benchmark-${{ runner.os }}-${{ runner.arch }}.txt
+          if-no-files-found: error
+          retention-days: 7
