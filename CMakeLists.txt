@@ -70,6 +70,24 @@ if(CARROT25519_TARGET_X86_64)
     S2N_BN_HIDE_SYMBOLS=1)
 endif()
 
+if(CARROT25519_BUILD_BENCHMARKS)
+  if(NOT UNIX)
+    message(FATAL_ERROR "benchmarks require a Unix-like host")
+  endif()
+  add_executable(carrot25519_benchmark bench/benchmark.c)
+  target_link_libraries(carrot25519_benchmark PRIVATE carrot25519)
+  carrot25519_strict_warnings(carrot25519_benchmark)
+  string(TOUPPER "${CMAKE_BUILD_TYPE}" carrot25519_build_type)
+  string(CONCAT carrot25519_benchmark_flags
+    "${CMAKE_C_FLAGS} " "${CMAKE_C_FLAGS_${carrot25519_build_type}}")
+  if(carrot25519_benchmark_flags MATCHES "sanitize")
+    target_compile_definitions(carrot25519_benchmark
+      PRIVATE CARROT25519_BENCHMARK_SANITIZED=1)
+  endif()
+  target_compile_definitions(carrot25519_benchmark PRIVATE
+    "CARROT25519_BENCHMARK_COMPILER=\"${CMAKE_C_COMPILER_ID}-${CMAKE_C_COMPILER_VERSION}\"")
+endif()
+
 install(TARGETS carrot25519
   EXPORT carrot25519Targets
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
