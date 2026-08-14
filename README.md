@@ -94,6 +94,15 @@ multiplication. The corresponding portable medians were 41.19 us and 44.72 us.
 See [the raw samples](bench/results/macos-arm64.txt). Benchmarks are
 informational and never decide correctness.
 
+### Help test x86_64
+
+The [mx25519 comparison run](https://github.com/SlowBearDigger/carrot25519/actions/runs/31843055542)
+checks byte-identical outputs before timing both libraries in the same process.
+To reproduce it, fork this repository, enable Actions, open the
+[Native benchmark workflow](https://github.com/SlowBearDigger/carrot25519/actions/workflows/benchmark.yml),
+and select **Run workflow**. Results from different Intel and AMD generations
+are welcome. Please share the run URL and raw artifact with the CPU model.
+
 ## Verification
 
 - A frozen 28-row corpus covers 172 operations per backend, including low
