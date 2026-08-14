@@ -16,6 +16,7 @@ foreach(required IN ITEMS
     "x86_64"
     "Local Linux AArch64 VM"
     "Bare-metal Linux AArch64"
+    "Windows is unsupported"
     "CARROT"
     "MIT"
     "CC0-1.0"

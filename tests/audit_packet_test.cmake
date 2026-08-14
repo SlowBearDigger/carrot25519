@@ -23,6 +23,7 @@ foreach(required IN ITEMS
     "Native Linux x86_64"
     "Local Linux AArch64 VM"
     "Bare-metal Linux AArch64"
+    "Windows is unsupported"
     "not independently audited"
     "not a proof of constant-time behavior"
     "src/portable/portable.c"

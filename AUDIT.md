@@ -152,8 +152,10 @@ The following are outside this primitive and require separate review:
   evidence.
 
 Native Linux x86_64 release, sanitizer, and benchmark evidence remains pending.
-Bare-metal Linux AArch64 execution remains pending. Windows currently exercises
-only the portable backend through the repository CI definition.
+Bare-metal Linux AArch64 execution remains pending. Windows is unsupported. The
+pinned portable Fiat-Crypto backend requires 128-bit integer support that MSVC
+does not provide. Supporting Windows requires a separately qualified backend or
+toolchain.
 
 ## Known limitations
 

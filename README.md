@@ -110,6 +110,8 @@ informational and never decide correctness.
 - Both x86_64 tiers pass the complete corpus, convergence, dispatch, guard-page,
   disassembly, and UBSan gates under Linux x86_64 emulation. Native Linux
   qualification remains pending.
+- Windows is unsupported. The pinned portable Fiat-Crypto backend requires
+  128-bit integer support that MSVC does not provide.
 
 ## Advantages and limits
 

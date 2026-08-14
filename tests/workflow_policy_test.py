@@ -69,10 +69,8 @@ def main() -> None:
         "ubuntu-24.04",
         "ubuntu-24.04-arm",
         "macos-15",
-        "windows-2025",
         "asan",
         "ubsan",
-        "CARROT25519_PORTABLE_ONLY=ON",
     ):
         if required not in ci:
             fail(f"CI matrix is missing {required}")
@@ -80,6 +78,8 @@ def main() -> None:
     blocks = dict(job_blocks(ci))
     linux_x86 = blocks.get("linux-x86-64", "")
     linux_arm = blocks.get("linux-arm64", "")
+    if "windows-portable" in blocks or "windows-" in ci:
+        fail("Windows CI is outside the supported platform scope")
     if "CARROT25519_BUILD_BENCHMARKS=ON" not in linux_x86:
         fail("Linux x86_64 CI does not compile the benchmark")
     for required in (

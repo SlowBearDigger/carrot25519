@@ -124,17 +124,3 @@ jobs:
         run: cmake --build build --parallel 4
       - name: Test
         run: ctest --test-dir build --output-on-failure
-
-  windows-portable:
-    runs-on: windows-2025
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          persist-credentials: false
-      - name: Configure
-        run: cmake -S . -B build -DCARROT25519_BUILD_TESTS=ON -DCARROT25519_PORTABLE_ONLY=ON
-      - name: Build
-        run: cmake --build build --config Release --parallel 4
-      - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
