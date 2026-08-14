@@ -109,9 +109,12 @@ informational and never decide correctness.
   tests. Bare-metal Linux AArch64 qualification remains pending.
 - GitHub-hosted Linux x86_64 passes GCC and Clang release tests plus Clang ASan
   and UBSan. Both x86_64 tiers pass corpus, convergence, dispatch, guard-page,
-  and disassembly gates. A native x86_64 benchmark remains pending.
+  and disassembly gates.
 - GitHub-hosted Linux ARM64 passes release, ASan, and UBSan tests on the native
   ARM64 backend.
+- [Native benchmark run 31805437243](https://github.com/SlowBearDigger/carrot25519/actions/runs/31805437243)
+  covers GitHub-hosted Linux x86_64, Linux ARM64, and macOS ARM64 at commit
+  `5885f83` with a clean worktree.
 - Windows is unsupported. The pinned portable Fiat-Crypto backend requires
   128-bit integer support that MSVC does not provide.
 

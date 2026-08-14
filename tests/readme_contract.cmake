@@ -17,6 +17,7 @@ foreach(required IN ITEMS
     "Local Linux AArch64 VM"
     "Bare-metal Linux AArch64"
     "GitHub-hosted Linux"
+    "31805437243"
     "Windows is unsupported"
     "CARROT"
     "MIT licensed"
@@ -33,6 +34,7 @@ foreach(unsupported IN ITEMS
     "production ready"
     "universally constant-time"
     "Native Linux qualification remains pending"
+    "native x86_64 benchmark remains pending"
     "permissively licensed"
     "No LGPL code"
     "MIT-0 terms")

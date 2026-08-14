@@ -153,11 +153,13 @@ The following are outside this primitive and require separate review:
 - GitHub-hosted Linux x86_64 has GCC and Clang release plus Clang ASan and
   UBSan evidence. GitHub-hosted Linux ARM64 has release, ASan, and UBSan
   evidence on the native ARM64 backend.
+- Native benchmark run `31805437243` covers GitHub-hosted Linux x86_64, Linux
+  ARM64, and macOS ARM64 at clean commit `5885f83`.
 
-Native Linux x86_64 benchmark evidence remains pending. Bare-metal Linux AArch64
-execution remains pending. Windows is unsupported. The pinned portable
-Fiat-Crypto backend requires 128-bit integer support that MSVC does not provide.
-Supporting Windows requires a separately qualified backend or toolchain.
+Bare-metal Linux AArch64 execution remains pending. Windows is unsupported. The
+pinned portable Fiat-Crypto backend requires 128-bit integer support that MSVC
+does not provide. Supporting Windows requires a separately qualified backend or
+toolchain.
 
 ## Known limitations
 
