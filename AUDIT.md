@@ -91,7 +91,7 @@ decoding, backend dispatch, or CARROT integration.
 - Are field bounds valid for every generated Fiat-Crypto call?
 - Are compiler-emitted branches and memory accesses independent of secrets?
 
-### ARM64 CC0
+### ARM64
 
 - Does the adaptation remove RFC clamping without changing any other scalar
   bit?
@@ -150,12 +150,14 @@ The following are outside this primitive and require separate review:
 - A Local Linux AArch64 VM using Colima/VZ on Apple ARM64 and GCC 13.3 has
   release, ASan, UBSan, guard-page, ELF disassembly, install, and consumer
   evidence.
+- GitHub-hosted Linux x86_64 has GCC and Clang release plus Clang ASan and
+  UBSan evidence. GitHub-hosted Linux ARM64 has release, ASan, and UBSan
+  evidence on the native ARM64 backend.
 
-Native Linux x86_64 release, sanitizer, and benchmark evidence remains pending.
-Bare-metal Linux AArch64 execution remains pending. Windows is unsupported. The
-pinned portable Fiat-Crypto backend requires 128-bit integer support that MSVC
-does not provide. Supporting Windows requires a separately qualified backend or
-toolchain.
+Native Linux x86_64 benchmark evidence remains pending. Bare-metal Linux AArch64
+execution remains pending. Windows is unsupported. The pinned portable
+Fiat-Crypto backend requires 128-bit integer support that MSVC does not provide.
+Supporting Windows requires a separately qualified backend or toolchain.
 
 ## Known limitations
 

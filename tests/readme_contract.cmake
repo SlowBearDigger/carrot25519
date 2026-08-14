@@ -16,11 +16,10 @@ foreach(required IN ITEMS
     "x86_64"
     "Local Linux AArch64 VM"
     "Bare-metal Linux AArch64"
+    "GitHub-hosted Linux"
     "Windows is unsupported"
     "CARROT"
-    "MIT"
-    "CC0-1.0"
-    "MIT-0"
+    "MIT licensed"
     "85qhvVeJwqd7LUhivp4YchfTQRCqs51GHaF13kkSgNLnBNtrnNVvADGVTvSUYKMDbfSitivYkZC39DwLByKBAWq9Gb38ggo")
   string(TOLOWER "${required}" normalized_required)
   string(FIND "${normalized_readme}" "${normalized_required}" offset)
@@ -32,7 +31,11 @@ endforeach()
 foreach(unsupported IN ITEMS
     "formally verified"
     "production ready"
-    "universally constant-time")
+    "universally constant-time"
+    "Native Linux qualification remains pending"
+    "permissively licensed"
+    "No LGPL code"
+    "MIT-0 terms")
   string(FIND "${normalized_readme}" "${unsupported}" offset)
   if(NOT offset EQUAL -1)
     message(FATAL_ERROR "README contains unsupported claim: ${unsupported}")

@@ -32,6 +32,7 @@ endif()
 string(REPLACE "\n" ";" inventory "${inventory_text}")
 foreach(path IN LISTS inventory)
   if(NOT path STREQUAL "tests/provenance_test.cmake" AND
+     EXISTS "${PROJECT_ROOT}/${path}" AND
      NOT IS_DIRECTORY "${PROJECT_ROOT}/${path}")
     file(READ "${PROJECT_ROOT}/${path}" contents LIMIT 1048576)
     if(contents MATCHES "SPDX-License-Identifier:[^\n]*(LGPL|GPL|AGPL)")

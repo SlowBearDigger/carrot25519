@@ -37,9 +37,9 @@ Unsupported explicit selections return `NULL`. Set
 `CARROT25519_PORTABLE_ONLY=ON` to disable optimized backends.
 
 The portable backend uses generated Fiat-Crypto field arithmetic. The ARM64
-backend adapts a CC0-1.0 implementation to CARROT scalar semantics and clears
-its 192-byte local scratch frame. The x86_64 backends compose pinned MIT-0
-s2n-bignum projective, reduction, inversion, and field multiplication objects.
+backend adapts pinned AArch64 assembly to CARROT scalar semantics and clears its
+192-byte local scratch frame. The x86_64 backends compose pinned s2n-bignum
+projective, reduction, inversion, and field multiplication objects.
 
 ## CARROT mapping
 
@@ -107,17 +107,19 @@ informational and never decide correctness.
 - A Local Linux AArch64 VM using Colima/VZ on Apple ARM64 and GCC 13.3 passes
   release, ASan, UBSan, guard-page, ELF disassembly, install, and consumer
   tests. Bare-metal Linux AArch64 qualification remains pending.
-- Both x86_64 tiers pass the complete corpus, convergence, dispatch, guard-page,
-  disassembly, and UBSan gates under Linux x86_64 emulation. Native Linux
-  qualification remains pending.
+- GitHub-hosted Linux x86_64 passes GCC and Clang release tests plus Clang ASan
+  and UBSan. Both x86_64 tiers pass corpus, convergence, dispatch, guard-page,
+  and disassembly gates. A native x86_64 benchmark remains pending.
+- GitHub-hosted Linux ARM64 passes release, ASan, and UBSan tests on the native
+  ARM64 backend.
 - Windows is unsupported. The pinned portable Fiat-Crypto backend requires
   128-bit integer support that MSVC does not provide.
 
 ## Advantages and limits
 
-The API is small, explicit, allocation-free, offline-buildable, and permissively
-licensed. Backends are visible to callers, so tests and applications do not need
-to guess which implementation is active.
+The project is MIT licensed. The API is small, explicit, allocation-free, and
+offline-buildable. Backends are visible to callers, so tests and applications
+do not need to guess which implementation is active.
 
 This repository is a reviewable experiment, not a production cryptography
 library. It has no independent security audit. The ARM64 code clears its local
@@ -125,12 +127,9 @@ scratch frame, but not registers or system-level copies. The x86_64 wrapper
 clears its own buffers, but the unmodified s2n-bignum assembly frames are not
 cleared. Hardware timing behavior is not guaranteed across every processor.
 
-## License and provenance
+## License
 
-Original code is MIT licensed. Vendored material retains its selected MIT,
-CC0-1.0, or MIT-0 terms. Exact commits, trees, file paths, licenses, and hashes
-are listed in [THIRD_PARTY.md](THIRD_PARTY.md). No LGPL code is included or
-linked.
+MIT licensed. See [LICENSE](LICENSE).
 
 ## Donate
 

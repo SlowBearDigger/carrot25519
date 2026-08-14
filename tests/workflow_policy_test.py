@@ -7,6 +7,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 SHA = re.compile(r"^[0-9a-f]{40}$")
+CHECKOUT_SHA = "3d3c42e5aac5ba805825da76410c181273ba90b1"
 
 
 def fail(message: str) -> None:
@@ -41,6 +42,10 @@ def check_workflow(path: Path) -> None:
         if not SHA.fullmatch(action):
             fail(f"mutable action reference: {path}")
 
+    for action in re.findall(r"uses:\s*actions/checkout@([^\s]+)", text):
+        if action != CHECKOUT_SHA:
+            fail(f"outdated checkout reference: {path}")
+
     for runner in re.findall(r"runs-on:\s*([^\n]+)", text):
         if re.search(r"(?:large|xlarge|[234]xl)", runner, re.IGNORECASE):
             fail(f"paid larger runner: {path}")
@@ -51,6 +56,9 @@ def check_workflow(path: Path) -> None:
 
 
 def main() -> None:
+    if (ROOT / "cmake" / "toolchains" / "mingw-w64.cmake").exists():
+        fail("Windows toolchain is outside the supported platform scope")
+
     paths = sorted(WORKFLOWS.glob("*.yml"))
     if {path.name for path in paths} != {"benchmark.yml", "ci.yml"}:
         fail("unexpected workflow inventory")
