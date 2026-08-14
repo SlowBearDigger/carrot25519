@@ -2,6 +2,10 @@
 
 #include "carrot25519.h"
 
+#if defined(CARROT25519_HAVE_MX25519_BENCHMARK)
+#include <mx25519.h>
+#endif
+
 #include <inttypes.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -14,11 +18,17 @@
 #endif
 
 #if !defined(CARROT25519_BENCHMARK_SANITIZED)
-enum { POOL_SIZE = 64, MAX_RECORDS = 8, MAX_TRIALS = 31 };
+enum { POOL_SIZE = 64, MAX_RECORDS = 16, MAX_TRIALS = 31 };
+
+typedef void benchmark_operation(
+    const void *implementation, uint8_t out[32], const uint8_t scalar[32],
+    const uint8_t point[32]);
 
 typedef struct measurement {
-    const carrot25519_impl *impl;
+    const void *implementation;
+    const char *implementation_name;
     const char *operation;
+    benchmark_operation *run;
     double samples[MAX_TRIALS];
     double median;
     uint8_t sink;
@@ -106,9 +116,92 @@ static void prepare_inputs(
     }
 }
 
+static void carrot_base(
+    const void *implementation, uint8_t out[32], const uint8_t scalar[32],
+    const uint8_t point[32])
+{
+    (void)point;
+    carrot25519_mul_base(
+        (const carrot25519_impl *)implementation, out, scalar);
+}
+
+static void carrot_point(
+    const void *implementation, uint8_t out[32], const uint8_t scalar[32],
+    const uint8_t point[32])
+{
+    carrot25519_mul(
+        (const carrot25519_impl *)implementation, out, scalar, point);
+}
+
+#if defined(CARROT25519_HAVE_MX25519_BENCHMARK)
+static void mx25519_base(
+    const void *implementation, uint8_t out[32], const uint8_t scalar[32],
+    const uint8_t point[32])
+{
+    mx25519_privkey key;
+    mx25519_pubkey result;
+    (void)point;
+    memcpy(key.data, scalar, sizeof(key.data));
+    mx25519_scmul_base(
+        (const mx25519_impl *)implementation, &result, &key);
+    memcpy(out, result.data, sizeof(result.data));
+}
+
+static void mx25519_point(
+    const void *implementation, uint8_t out[32], const uint8_t scalar[32],
+    const uint8_t point[32])
+{
+    mx25519_privkey key;
+    mx25519_pubkey input;
+    mx25519_pubkey result;
+    memcpy(key.data, scalar, sizeof(key.data));
+    memcpy(input.data, point, sizeof(input.data));
+    mx25519_scmul_key(
+        (const mx25519_impl *)implementation, &result, &key, &input);
+    memcpy(out, result.data, sizeof(result.data));
+}
+
+static const char *mx25519_name(mx25519_type type)
+{
+    switch (type)
+    {
+    case MX25519_TYPE_PORTABLE:
+        return "mx25519/portable";
+    case MX25519_TYPE_ARM64:
+        return "mx25519/arm64";
+    case MX25519_TYPE_AMD64:
+        return "mx25519/amd64";
+    case MX25519_TYPE_AMD64X:
+        return "mx25519/amd64x";
+    case MX25519_TYPE_AUTO:
+        break;
+    }
+    return "mx25519/unknown";
+}
+#endif
+
+static int verify_measurement(
+    const measurement *reference, const measurement *candidate,
+    uint8_t scalars[POOL_SIZE][32], uint8_t points[POOL_SIZE][32])
+{
+    uint8_t expected[32];
+    uint8_t actual[32];
+    for (size_t index = 0; index < POOL_SIZE; ++index)
+    {
+        const uint8_t *point = points[(index + 11) % POOL_SIZE];
+        reference->run(
+            reference->implementation, expected, scalars[index], point);
+        candidate->run(
+            candidate->implementation, actual, scalars[index], point);
+        if (memcmp(expected, actual, sizeof(expected)) != 0)
+            return 0;
+    }
+    return 1;
+}
+
 static void run_operation(
-    const carrot25519_impl *impl, int use_point, uint64_t iterations,
-    size_t trial, uint8_t scalars[POOL_SIZE][32],
+    const measurement *result, uint64_t iterations, size_t trial,
+    uint8_t scalars[POOL_SIZE][32],
     uint8_t points[POOL_SIZE][32], uint8_t *sink)
 {
     uint8_t output[32];
@@ -116,11 +209,9 @@ static void run_operation(
     {
         const size_t index =
             (size_t)((iteration + trial * 17U) % POOL_SIZE);
-        if (use_point)
-            carrot25519_mul(
-                impl, output, scalars[index], points[(index + 11) % POOL_SIZE]);
-        else
-            carrot25519_mul_base(impl, output, scalars[index]);
+        result->run(
+            result->implementation, output, scalars[index],
+            points[(index + 11) % POOL_SIZE]);
         *sink ^= output[(iteration + trial) % 32];
     }
 }
@@ -131,15 +222,13 @@ static int measure(
     uint8_t points[POOL_SIZE][32])
 {
     uint8_t sink = 0;
-    const int use_point = strcmp(result->operation, "point") == 0;
     run_operation(
-        result->impl, use_point, iterations, 0, scalars, points, &sink);
+        result, iterations, 0, scalars, points, &sink);
     for (size_t trial = 0; trial < trials; ++trial)
     {
         const uint64_t start = monotonic_ns();
         run_operation(
-            result->impl, use_point, iterations, trial, scalars, points,
-            &sink);
+            result, iterations, trial, scalars, points, &sink);
         const uint64_t end = monotonic_ns();
         if (start == 0 || end <= start)
             return 0;
@@ -212,18 +301,60 @@ int main(int argc, char **argv)
     for (size_t index = 0; index < implementation_count; ++index)
     {
         records[record_count++] =
-            (measurement){implementations[index], "base", {0}, 0, 0};
+            (measurement){
+                implementations[index],
+                carrot25519_impl_name(implementations[index]),
+                "base",
+                carrot_base,
+                {0},
+                0,
+                0};
         records[record_count++] =
-            (measurement){implementations[index], "point", {0}, 0, 0};
+            (measurement){
+                implementations[index],
+                carrot25519_impl_name(implementations[index]),
+                "point",
+                carrot_point,
+                {0},
+                0,
+                0};
     }
+#if defined(CARROT25519_HAVE_MX25519_BENCHMARK)
+    for (mx25519_type type = MX25519_TYPE_PORTABLE;
+         type <= MX25519_TYPE_AMD64X; ++type)
+    {
+        const mx25519_impl *implementation = mx25519_select_impl(type);
+        if (implementation == NULL)
+            continue;
+        records[record_count++] = (measurement){
+            implementation,
+            mx25519_name(type),
+            "base",
+            mx25519_base,
+            {0},
+            0,
+            0};
+        records[record_count++] = (measurement){
+            implementation,
+            mx25519_name(type),
+            "point",
+            mx25519_point,
+            {0},
+            0,
+            0};
+    }
+#endif
     for (size_t index = 0; index < record_count; ++index)
     {
+        const size_t portable_index =
+            strcmp(records[index].operation, "base") == 0 ? 0 : 1;
+        if (!verify_measurement(
+                &records[portable_index], &records[index], scalars, points))
+            return 3;
         if (!measure(
                 &records[index], iterations, (size_t)trial_count, scalars,
                 points))
             return 2;
-        const size_t portable_index =
-            strcmp(records[index].operation, "base") == 0 ? 0 : 1;
         if (index > 1 && records[index].sink != records[portable_index].sink)
             return 3;
     }
@@ -234,6 +365,10 @@ int main(int argc, char **argv)
     printf("os=%s\n", build_os());
     printf("arch=%s\n", build_arch());
     printf("compiler=%s\n", CARROT25519_BENCHMARK_COMPILER);
+#if defined(CARROT25519_HAVE_MX25519_BENCHMARK)
+    printf("mx25519_commit=%s\n", CARROT25519_MX25519_COMMIT);
+    printf("mx25519_tree=%s\n", CARROT25519_MX25519_TREE);
+#endif
     printf(
         "auto_implementation=%s\n",
         carrot25519_impl_name(carrot25519_select_impl(CARROT25519_IMPL_AUTO)));
@@ -247,7 +382,7 @@ int main(int argc, char **argv)
                 : records[1].median;
         printf(
             "\nimplementation=%s\n",
-            carrot25519_impl_name(records[index].impl));
+            records[index].implementation_name);
         printf("operation=%s\n", records[index].operation);
         printf("samples_ns_per_op=");
         for (size_t trial = 0; trial < trial_count; ++trial)

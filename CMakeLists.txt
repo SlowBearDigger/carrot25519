@@ -7,7 +7,15 @@ include(GNUInstallDirs)
 
 option(CARROT25519_BUILD_TESTS "Build carrot25519 tests" OFF)
 option(CARROT25519_BUILD_BENCHMARKS "Build carrot25519 benchmarks" OFF)
+option(CARROT25519_BUILD_MX25519_BENCHMARK
+  "Include the external mx25519 reference in benchmarks" OFF)
 option(CARROT25519_PORTABLE_ONLY "Disable optimized backends" OFF)
+set(CARROT25519_MX25519_SOURCE "" CACHE PATH
+  "Path to the exact external mx25519 checkout")
+set(CARROT25519_MX25519_COMMIT "" CACHE STRING
+  "Expected external mx25519 commit")
+set(CARROT25519_MX25519_TREE "" CACHE STRING
+  "Expected external mx25519 tree")
 
 string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" carrot25519_processor)
 set(CARROT25519_TARGET_ARM64 OFF)
@@ -86,6 +94,59 @@ if(CARROT25519_BUILD_BENCHMARKS)
   endif()
   target_compile_definitions(carrot25519_benchmark PRIVATE
     "CARROT25519_BENCHMARK_COMPILER=\"${CMAKE_C_COMPILER_ID}-${CMAKE_C_COMPILER_VERSION}\"")
+
+  if(CARROT25519_BUILD_MX25519_BENCHMARK)
+    if(NOT IS_DIRECTORY "${CARROT25519_MX25519_SOURCE}")
+      message(FATAL_ERROR "CARROT25519_MX25519_SOURCE must be an exact checkout")
+    endif()
+    foreach(identity IN ITEMS COMMIT TREE)
+      string(LENGTH "${CARROT25519_MX25519_${identity}}" identity_length)
+      if(NOT identity_length EQUAL 40 OR
+         NOT CARROT25519_MX25519_${identity} MATCHES "^[0-9a-f]+$")
+        message(FATAL_ERROR "CARROT25519_MX25519_${identity} must be a SHA-1")
+      endif()
+    endforeach()
+    find_package(Git REQUIRED)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} -C "${CARROT25519_MX25519_SOURCE}"
+              rev-parse HEAD^{commit} HEAD^{tree}
+      RESULT_VARIABLE mx25519_identity_status
+      OUTPUT_VARIABLE mx25519_identity
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REPLACE "\n" ";" mx25519_identity "${mx25519_identity}")
+    list(LENGTH mx25519_identity mx25519_identity_count)
+    if(NOT mx25519_identity_status EQUAL 0 OR
+       NOT mx25519_identity_count EQUAL 2)
+      message(FATAL_ERROR "unable to verify mx25519 source identity")
+    endif()
+    list(GET mx25519_identity 0 mx25519_actual_commit)
+    list(GET mx25519_identity 1 mx25519_actual_tree)
+    if(NOT mx25519_actual_commit STREQUAL CARROT25519_MX25519_COMMIT OR
+       NOT mx25519_actual_tree STREQUAL CARROT25519_MX25519_TREE)
+      message(FATAL_ERROR "mx25519 source identity mismatch")
+    endif()
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} -C "${CARROT25519_MX25519_SOURCE}"
+              status --porcelain=v1
+      RESULT_VARIABLE mx25519_status_result
+      OUTPUT_VARIABLE mx25519_status
+      OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT mx25519_status_result EQUAL 0 OR NOT mx25519_status STREQUAL "")
+      message(FATAL_ERROR "mx25519 source checkout must be clean")
+    endif()
+
+    add_subdirectory(
+      "${CARROT25519_MX25519_SOURCE}"
+      "${CMAKE_CURRENT_BINARY_DIR}/mx25519"
+      EXCLUDE_FROM_ALL)
+    target_link_libraries(carrot25519_benchmark PRIVATE mx25519_static)
+    target_include_directories(carrot25519_benchmark PRIVATE
+      "${CARROT25519_MX25519_SOURCE}/include")
+    target_compile_definitions(carrot25519_benchmark PRIVATE
+      CARROT25519_HAVE_MX25519_BENCHMARK=1
+      "CARROT25519_MX25519_COMMIT=\"${CARROT25519_MX25519_COMMIT}\""
+      "CARROT25519_MX25519_TREE=\"${CARROT25519_MX25519_TREE}\"")
+  endif()
 endif()
 
 install(TARGETS carrot25519
@@ -137,6 +198,10 @@ if(CARROT25519_BUILD_TESTS)
     NAME audit_packet
     COMMAND ${CMAKE_COMMAND} -DPROJECT_ROOT=${CMAKE_CURRENT_SOURCE_DIR}
             -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/audit_packet_test.cmake)
+  add_test(
+    NAME reference_benchmark_policy
+    COMMAND ${CMAKE_COMMAND} -E env
+            python3 ${CMAKE_CURRENT_SOURCE_DIR}/tests/reference_benchmark_policy_test.py)
 
   add_executable(carrot25519_backend_matrix_test tests/backend_matrix_test.c)
   target_link_libraries(carrot25519_backend_matrix_test PRIVATE carrot25519)

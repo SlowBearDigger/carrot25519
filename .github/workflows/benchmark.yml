@@ -39,3 +39,49 @@ jobs:
           path: benchmark-${{ runner.os }}-${{ runner.arch }}.txt
           if-no-files-found: error
           retention-days: 7
+
+  mx25519-comparison:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      MX25519_COMMIT: e808a6406b254091f4ed83bf8ea35f032da7f0b7
+      MX25519_TREE: 08cf8d6b18e36e7892bde5ddffae212e7a1ae88a
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Checkout exact mx25519 reference
+        shell: bash
+        run: |
+          git init "$RUNNER_TEMP/mx25519"
+          git -C "$RUNNER_TEMP/mx25519" remote add origin https://github.com/jeffro256/mx25519.git
+          git -C "$RUNNER_TEMP/mx25519" fetch --depth=1 origin "$MX25519_COMMIT"
+          git -C "$RUNNER_TEMP/mx25519" checkout --detach FETCH_HEAD
+          test "$(git -C "$RUNNER_TEMP/mx25519" rev-parse HEAD^{commit})" = "$MX25519_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/mx25519" rev-parse HEAD^{tree})" = "$MX25519_TREE"
+          test -z "$(git -C "$RUNNER_TEMP/mx25519" status --porcelain=v1)"
+      - name: Configure comparison
+        run: >-
+          cmake -S . -B build-compare
+          -DCMAKE_BUILD_TYPE=Release
+          -DCARROT25519_BUILD_BENCHMARKS=ON
+          -DCARROT25519_BUILD_MX25519_BENCHMARK=ON
+          -DCARROT25519_MX25519_SOURCE="$RUNNER_TEMP/mx25519"
+          -DCARROT25519_MX25519_COMMIT="$MX25519_COMMIT"
+          -DCARROT25519_MX25519_TREE="$MX25519_TREE"
+      - name: Build comparison
+        run: cmake --build build-compare --target carrot25519_benchmark --parallel 4
+      - name: Compare on native x86_64
+        shell: bash
+        env:
+          CARROT25519_BENCHMARK_BINARY: build-compare/carrot25519_benchmark
+        run: >-
+          ./bench/run-local.sh --iterations 5000 --trials 7
+          --output benchmark-linux-x86_64-mx25519.txt
+      - name: Upload comparison
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: benchmark-linux-x86_64-mx25519
+          path: benchmark-linux-x86_64-mx25519.txt
+          if-no-files-found: error
+          retention-days: 7
