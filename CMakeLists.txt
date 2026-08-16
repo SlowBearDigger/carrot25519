@@ -41,6 +41,8 @@ endfunction()
 add_library(carrot25519 STATIC
   src/carrot25519.c
   src/secure_zero.c
+  src/fixed_base/fixed_base.c
+  src/fixed_base/ref10/ref10.c
   src/portable/portable.c)
 add_library(carrot25519::carrot25519 ALIAS carrot25519)
 
@@ -221,6 +223,19 @@ if(CARROT25519_BUILD_TESTS)
   target_link_libraries(carrot25519_carrot_convergence_test PRIVATE carrot25519)
   carrot25519_strict_warnings(carrot25519_carrot_convergence_test)
   add_test(NAME carrot_convergence COMMAND carrot25519_carrot_convergence_test)
+
+  add_executable(carrot25519_fixed_base_test tests/fixed_base_test.c)
+  target_include_directories(carrot25519_fixed_base_test PRIVATE src)
+  target_link_libraries(carrot25519_fixed_base_test PRIVATE carrot25519)
+  carrot25519_strict_warnings(carrot25519_fixed_base_test)
+  add_test(NAME fixed_base COMMAND carrot25519_fixed_base_test)
+
+  if(UNIX)
+    add_test(
+      NAME internal_symbols
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_internal_symbols.sh
+              $<TARGET_FILE:carrot25519>)
+  endif()
 
   add_executable(
     carrot25519_monero_wrapper_compat_test

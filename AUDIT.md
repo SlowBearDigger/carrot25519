@@ -61,6 +61,8 @@ Original implementation and dispatch code:
 - `src/carrot25519.c`
 - `src/internal.h`
 - `src/secure_zero.c`
+- `src/fixed_base/fixed_base.c`
+- `src/fixed_base/ref10/`
 - `src/portable/portable.c`
 - `src/arm64/arm64.c`
 - `src/arm64/x25519_aarch64.S`
@@ -80,6 +82,10 @@ Vendored Fiat-Crypto and s2n-bignum files are digest-bound in
 evidence, but they do not prove the complete carrot25519 wrappers, byte
 decoding, backend dispatch, or CARROT integration.
 
+The public-domain ref10 fixed-base subset is also digest-bound. Its historical
+use and constant-schedule table selection are useful evidence, not a proof of
+this wrapper or of compiler and hardware timing behavior.
+
 ## Backend review questions
 
 ### Portable Fiat 5x51
@@ -90,6 +96,16 @@ decoding, backend dispatch, or CARROT integration.
 - Does inversion of zero produce the documented all-zero encoding?
 - Are field bounds valid for every generated Fiat-Crypto call?
 - Are compiler-emitted branches and memory accesses independent of secrets?
+
+### Fixed-base ref10
+
+- Does the scalar mask ignore only bit 255 before fixed-window recoding?
+- Is every table selection performed by a full constant-schedule scan and
+  conditional move, without a scalar-derived address?
+- Is the Edwards-to-Montgomery map `(Z + Y) / (Z - Y)` correct, including the
+  identity and zero-denominator convention?
+- Does exact output and scalar aliasing remain safe?
+- Are top-level scalar digits and group scratch cleared on every return?
 
 ### ARM64
 
@@ -144,6 +160,8 @@ The following are outside this primitive and require separate review:
   exact aliases.
 - Disassembly gates inspect the ARM64 scratch wipe and x86_64 instruction and
   symbol boundaries.
+- The fixed-base regression checks 6,144 scalar cases against the independent
+  Montgomery ladder, including exact aliases and bit 255 invariance.
 - Provenance checks pin every vendored cryptographic source and the corpus.
 - macOS ARM64 has local release, ASan, UBSan, CFI, install, consumer, and
   benchmark evidence.
@@ -168,6 +186,9 @@ toolchain.
   system copies.
 - The x86_64 wrapper clears its own temporary buffers. Unmodified s2n-bignum
   assembly frames are not cleared.
+- The fixed-base path clears its scalar copy, signed digits, group state, and
+  wrapper field elements. It does not guarantee removal of compiler-created
+  temporaries, spills, registers, or system copies.
 - Sanitizers instrument C and C++ boundaries, not the assembly instructions.
 - Native timing evidence does not establish behavior on other processors.
 - The raw API cannot prevent a downstream integration from omitting mandatory

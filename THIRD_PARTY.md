@@ -22,7 +22,7 @@ The generated field arithmetic is vendored without local edits.
 - License: CC0-1.0
 - Legal code: `licenses/CC0-1.0.txt`
 - Vendored path: `src/arm64/x25519_aarch64.S`
-- Adapted source SHA-256: `9c4814e489a2b1961867778beb139373d57c6d7a7102916f671d0b2cb668d04d`
+- Adapted source SHA-256: `2d267ce802f44c839adce339d823bbbe491462b312cdc36e3fa1b3ebc00870e6`
 
 The assembly is adapted for the raw CARROT scalar contract, Mach-O and ELF
 integration, unaligned output stores, and local scratch-frame clearing. The
@@ -52,3 +52,18 @@ normal build uses only vendored sources and does not download dependencies.
 The wrapper composes the projective multiplication, reduction, inversion, and
 field multiplication primitives. It clears its own temporary buffers, but the
 unmodified assembly frames are not cleared.
+
+## ref10 fixed-base subset
+
+- Origin: Daniel J. Bernstein's SUPERCOP Ed25519 ref10 implementation
+- Source snapshot: https://github.com/seraphis-migration/monero
+- Commit: `3f159b13e000ca9f0906599c9c5fd9c13f55233c`
+- Tree: `bc91b1b48c9332a155dd9ab39c864781b42846c8`
+- Status: public domain
+- Vendored path: `src/fixed_base/ref10/`
+
+Only the fixed-base table and its required field and group operations are
+included. Local adaptations namespace the symbols, clear top-level scratch
+state, and replace signed left shifts with equivalent defined arithmetic. The
+original source notice is available at
+https://ed25519.cr.yp.to/software.html.

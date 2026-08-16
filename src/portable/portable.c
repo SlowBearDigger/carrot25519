@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "internal.h"
+#include "fixed_base/fixed_base.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -239,8 +240,7 @@ static void portable_mul(
 
 static void portable_mul_base(uint8_t out[32], const uint8_t scalar[32])
 {
-    static const uint8_t basepoint[32] = {9};
-    portable_mul(out, scalar, basepoint);
+    carrot25519_fixed_base(out, scalar);
 }
 
 const carrot25519_impl carrot25519_portable_impl = {

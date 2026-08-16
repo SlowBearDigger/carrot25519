@@ -36,6 +36,8 @@ def main() -> None:
         "MX25519_TYPE_PORTABLE",
         "MX25519_TYPE_AMD64",
         "MX25519_TYPE_AMD64X",
+        '"base-ladder"',
+        "measure_interleaved",
         "mx25519_commit=",
         "mx25519_tree=",
     ):

@@ -18,7 +18,7 @@
 #endif
 
 #if !defined(CARROT25519_BENCHMARK_SANITIZED)
-enum { POOL_SIZE = 64, MAX_RECORDS = 16, MAX_TRIALS = 31 };
+enum { POOL_SIZE = 64, MAX_RECORDS = 24, MAX_TRIALS = 31 };
 
 typedef void benchmark_operation(
     const void *implementation, uint8_t out[32], const uint8_t scalar[32],
@@ -133,6 +133,16 @@ static void carrot_point(
         (const carrot25519_impl *)implementation, out, scalar, point);
 }
 
+static void carrot_base_ladder(
+    const void *implementation, uint8_t out[32], const uint8_t scalar[32],
+    const uint8_t point[32])
+{
+    static const uint8_t basepoint[32] = {9};
+    (void)point;
+    carrot25519_mul(
+        (const carrot25519_impl *)implementation, out, scalar, basepoint);
+}
+
 #if defined(CARROT25519_HAVE_MX25519_BENCHMARK)
 static void mx25519_base(
     const void *implementation, uint8_t out[32], const uint8_t scalar[32],
@@ -216,27 +226,48 @@ static void run_operation(
     }
 }
 
-static int measure(
-    measurement *result, uint64_t iterations, size_t trials,
+static int measure_once(
+    measurement *result, uint64_t iterations, size_t trial,
     uint8_t scalars[POOL_SIZE][32],
     uint8_t points[POOL_SIZE][32])
 {
-    uint8_t sink = 0;
+    const uint64_t start = monotonic_ns();
     run_operation(
-        result, iterations, 0, scalars, points, &sink);
+        result, iterations, trial, scalars, points, &result->sink);
+    const uint64_t end = monotonic_ns();
+    if (start == 0 || end <= start)
+        return 0;
+    result->samples[trial] = (double)(end - start) / (double)iterations;
+    return 1;
+}
+
+static int measure_interleaved(
+    measurement records[MAX_RECORDS], size_t record_count,
+    uint64_t iterations, size_t trials,
+    uint8_t scalars[POOL_SIZE][32], uint8_t points[POOL_SIZE][32])
+{
+    for (size_t index = 0; index < record_count; ++index)
+        run_operation(
+            &records[index], iterations, 0, scalars, points,
+            &records[index].sink);
+
     for (size_t trial = 0; trial < trials; ++trial)
     {
-        const uint64_t start = monotonic_ns();
-        run_operation(
-            result, iterations, trial, scalars, points, &sink);
-        const uint64_t end = monotonic_ns();
-        if (start == 0 || end <= start)
-            return 0;
-        result->samples[trial] = (double)(end - start) / (double)iterations;
+        for (size_t offset = 0; offset < record_count; ++offset)
+        {
+            const size_t index =
+                (trial & 1U) == 0 ? offset : record_count - 1U - offset;
+            if (!measure_once(
+                    &records[index], iterations, trial, scalars, points))
+                return 0;
+        }
     }
-    result->median = median(result->samples, trials);
-    result->sink = sink;
-    benchmark_sink ^= sink;
+
+    for (size_t index = 0; index < record_count; ++index)
+    {
+        records[index].median = median(records[index].samples, trials);
+        benchmark_sink ^= records[index].sink;
+    }
     return 1;
 }
 
@@ -313,6 +344,15 @@ int main(int argc, char **argv)
             (measurement){
                 implementations[index],
                 carrot25519_impl_name(implementations[index]),
+                "base-ladder",
+                carrot_base_ladder,
+                {0},
+                0,
+                0};
+        records[record_count++] =
+            (measurement){
+                implementations[index],
+                carrot25519_impl_name(implementations[index]),
                 "point",
                 carrot_point,
                 {0},
@@ -347,15 +387,28 @@ int main(int argc, char **argv)
     for (size_t index = 0; index < record_count; ++index)
     {
         const size_t portable_index =
-            strcmp(records[index].operation, "base") == 0 ? 0 : 1;
+            strcmp(records[index].operation, "base") == 0
+                ? 0
+                : strcmp(records[index].operation, "base-ladder") == 0
+                    ? 1
+                    : 2;
         if (!verify_measurement(
                 &records[portable_index], &records[index], scalars, points))
             return 3;
-        if (!measure(
-                &records[index], iterations, (size_t)trial_count, scalars,
-                points))
-            return 2;
-        if (index > 1 && records[index].sink != records[portable_index].sink)
+    }
+    if (!measure_interleaved(
+            records, record_count, iterations, (size_t)trial_count,
+            scalars, points))
+        return 2;
+    for (size_t index = 0; index < record_count; ++index)
+    {
+        const size_t portable_index =
+            strcmp(records[index].operation, "base") == 0
+                ? 0
+                : strcmp(records[index].operation, "base-ladder") == 0
+                    ? 1
+                    : 2;
+        if (index > 2 && records[index].sink != records[portable_index].sink)
             return 3;
     }
 
@@ -379,7 +432,9 @@ int main(int argc, char **argv)
         const double portable_median =
             strcmp(records[index].operation, "base") == 0
                 ? records[0].median
-                : records[1].median;
+                : strcmp(records[index].operation, "base-ladder") == 0
+                    ? records[1].median
+                    : records[2].median;
         printf(
             "\nimplementation=%s\n",
             records[index].implementation_name);

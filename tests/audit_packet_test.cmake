@@ -27,6 +27,7 @@ foreach(required IN ITEMS
     "31805437243"
     "not independently audited"
     "not a proof of constant-time behavior"
+    "src/fixed_base/fixed_base.c"
     "src/portable/portable.c"
     "src/arm64/x25519_aarch64.S"
     "src/x86_64/x86_64.c")

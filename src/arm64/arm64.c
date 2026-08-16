@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "internal.h"
+#include "fixed_base/fixed_base.h"
 
 void carrot25519_arm64_scalarmult(
     uint8_t out[32], const uint8_t scalar[32], const uint8_t point[32]);
@@ -13,8 +14,7 @@ static void arm64_mul(
 
 static void arm64_mul_base(uint8_t out[32], const uint8_t scalar[32])
 {
-    static const uint8_t basepoint[32] = {9};
-    carrot25519_arm64_scalarmult(out, scalar, basepoint);
+    carrot25519_fixed_base(out, scalar);
 }
 
 const carrot25519_impl carrot25519_arm64_impl = {

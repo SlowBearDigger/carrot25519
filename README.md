@@ -36,10 +36,11 @@ features are reported by CPUID, otherwise it selects the baseline backend.
 Unsupported explicit selections return `NULL`. Set
 `CARROT25519_PORTABLE_ONLY=ON` to disable optimized backends.
 
-The portable backend uses generated Fiat-Crypto field arithmetic. The ARM64
-backend adapts pinned AArch64 assembly to CARROT scalar semantics and clears its
-192-byte local scratch frame. The x86_64 backends compose pinned s2n-bignum
-projective, reduction, inversion, and field multiplication objects.
+Portable and ARM64 basepoint multiplication uses a constant-schedule ref10
+fixed-base table. Arbitrary-point multiplication remains unchanged: portable
+uses generated Fiat-Crypto field arithmetic, while ARM64 uses pinned AArch64
+assembly adapted to CARROT scalar semantics. The x86_64 backends compose pinned
+s2n-bignum projective, reduction, inversion, and field multiplication objects.
 
 ## CARROT mapping
 
@@ -88,6 +89,10 @@ cmake --build build-bench --parallel
 ./bench/run-local.sh --iterations 5000 --trials 7
 ```
 
+Each implementation reports `base`, `base-ladder`, and `point`. The first two
+use the same scalars and are measured in alternating order, providing a direct
+fixed-base versus Montgomery-ladder comparison on the same host.
+
 The recorded macOS ARM64 result at commit `8db8fd2` measured medians of
 25.86 us for ARM64 basepoint multiplication and 26.22 us for arbitrary-point
 multiplication. The corresponding portable medians were 41.19 us and 44.72 us.
@@ -111,6 +116,8 @@ are welcome. Please share the run URL and raw artifact with the CPU model.
 - The CARROT convergence suite covers every scalar `2^i + j` for
   `i = 0..254` and `j = 0..7`, three points, ECDH convergence, and current
   small-order cases.
+- A separate fixed-base regression compares the table path against the
+  independent Montgomery ladder for 6,144 scalar cases and exact aliases.
 - macOS ARM64 passes release, ASan, UBSan, guard-page, disassembly, CFI, install,
   and consumer tests.
 - A Local Linux AArch64 VM using Colima/VZ on Apple ARM64 and GCC 13.3 passes
@@ -137,7 +144,10 @@ This repository is a reviewable experiment, not a production cryptography
 library. It has no independent security audit. The ARM64 code clears its local
 scratch frame, but not registers or system-level copies. The x86_64 wrapper
 clears its own buffers, but the unmodified s2n-bignum assembly frames are not
-cleared. Hardware timing behavior is not guaranteed across every processor.
+cleared. The fixed-base path clears top-level scratch state, but compiler
+temporaries and spills may remain. Its table and code add about 40 KiB of text
+to the static library. Hardware timing behavior is not guaranteed across every
+processor.
 
 ## License
 
