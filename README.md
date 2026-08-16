@@ -36,11 +36,12 @@ features are reported by CPUID, otherwise it selects the baseline backend.
 Unsupported explicit selections return `NULL`. Set
 `CARROT25519_PORTABLE_ONLY=ON` to disable optimized backends.
 
-Portable and ARM64 basepoint multiplication uses a constant-schedule ref10
-fixed-base table. Arbitrary-point multiplication remains unchanged: portable
-uses generated Fiat-Crypto field arithmetic, while ARM64 uses pinned AArch64
-assembly adapted to CARROT scalar semantics. The x86_64 backends compose pinned
-s2n-bignum projective, reduction, inversion, and field multiplication objects.
+Portable, ARM64, and baseline x86_64 basepoint multiplication use a
+constant-schedule ref10 fixed-base table. Arbitrary-point multiplication
+remains unchanged: portable uses generated Fiat-Crypto field arithmetic, ARM64
+uses pinned AArch64 assembly adapted to CARROT scalar semantics, and x86_64
+composes pinned s2n-bignum projective, reduction, inversion, and field
+multiplication objects. The BMI2+ADX basepoint path also remains on s2n-bignum.
 
 ## CARROT mapping
 
@@ -99,6 +100,11 @@ The portable medians were 24.14 us and 39.46 us, a 38.8% reduction.
 Arbitrary-point medians were 25.68 us and 39.49 us respectively. See
 [the raw samples](bench/results/macos-arm64.txt). Benchmarks are informational
 and never decide correctness.
+
+On a GitHub-hosted Linux x86_64 runner at commit `67854a1`, the baseline x86_64
+fixed-base and ladder medians were 36.78 us and 39.32 us in the same process, a
+6.4% latency reduction. The BMI2+ADX path remained on its 32.33 us s2n-bignum
+implementation. See [the raw samples](bench/results/linux-x86_64-fixed-base.txt).
 
 ### Help test x86_64
 

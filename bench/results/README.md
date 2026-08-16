@@ -14,3 +14,9 @@ cmake --build build-bench --parallel
 ```
 
 Translated, emulated, cross-compiled, and sanitized executions are rejected.
+
+`linux-x86_64.txt` records the pre-change baseline. The post-change run is in
+`linux-x86_64-fixed-base.txt`. Shared GitHub runners vary between runs, so the
+authoritative comparison is the alternating `base` and `base-ladder` pair in
+the post-change process: 36.78 us versus 39.32 us for `s2n-baseline`, a 6.4%
+latency reduction. The BMI2+ADX path remained unchanged.
