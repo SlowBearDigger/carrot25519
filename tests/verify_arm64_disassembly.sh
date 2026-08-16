@@ -23,7 +23,22 @@ esac
 case "$(uname -s)" in
   Darwin)
     nm -m "$1" | grep -q 'private external _carrot25519_arm64_scalarmult'
-    xcrun dwarfdump --eh-frame "$1" | grep -Fq 'CFA=W29+160'
+    unwind=$(xcrun dwarfdump --eh-frame "$1")
+    printf '%s\n' "$unwind" | grep -Fq 'CFA=W29+160'
+    main_last_row=$(printf '%s\n' "$unwind" | awk '
+      /^0+[[:space:]].*FDE / {
+        if (main && last != "") print last
+        main = 0
+        last = ""
+      }
+      /CFA=W29\+160/ { main = 1 }
+      /^  0x[[:xdigit:]]+:/ { last = $0 }
+      END { if (main && last != "") print last }
+    ')
+    case "$main_last_row" in
+      *': CFA=WSP') ;;
+      *) printf 'arm64_unwind=fail\n' >&2; exit 1 ;;
+    esac
     ;;
 esac
 

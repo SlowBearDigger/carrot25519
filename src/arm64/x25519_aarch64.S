@@ -117,10 +117,22 @@ load256unaligned:
 	// out: x0: result pointer
 #if defined(__APPLE__)
 #define CARROT25519_ARM64_SYMBOL _carrot25519_arm64_scalarmult
+#define CARROT25519_MAINLOOP Lcarrot25519_mainloop
+#define CARROT25519_INVLOOPNEXT Lcarrot25519_invloopnext
+#define CARROT25519_SQRLOOP1 Lcarrot25519_sqrloop1
+#define CARROT25519_SKIPSQUARE Lcarrot25519_skipsquare
+#define CARROT25519_SKIPMUL Lcarrot25519_skipmul
+#define CARROT25519_SKIPSTORE Lcarrot25519_skipstore
 	.globl	CARROT25519_ARM64_SYMBOL
 	.private_extern CARROT25519_ARM64_SYMBOL
 #else
 #define CARROT25519_ARM64_SYMBOL carrot25519_arm64_scalarmult
+#define CARROT25519_MAINLOOP .Lcarrot25519_mainloop
+#define CARROT25519_INVLOOPNEXT .Lcarrot25519_invloopnext
+#define CARROT25519_SQRLOOP1 .Lcarrot25519_sqrloop1
+#define CARROT25519_SKIPSQUARE .Lcarrot25519_skipsquare
+#define CARROT25519_SKIPMUL .Lcarrot25519_skipmul
+#define CARROT25519_SKIPSTORE .Lcarrot25519_skipstore
 	.global	CARROT25519_ARM64_SYMBOL
 	.hidden	CARROT25519_ARM64_SYMBOL
 	.type	CARROT25519_ARM64_SYMBOL, %function
@@ -253,7 +265,7 @@ CARROT25519_ARM64_SYMBOL:
 	lsr	w1, w1, #6
 	str	w1, [sp, #100]
 
-.Lmainloop:
+CARROT25519_MAINLOOP:
 	tst	w1, #1
 
 	// (2^255-19)*4 - Z_
@@ -1247,7 +1259,7 @@ mov	v10.d[0], v0.d[1]
 	// X5 -> X3 in v10, v12, ..., v18
 	// Z5 -> Z3 in v11, v13, ..., v19
 
-	bpl	.Lmainloop
+	bpl	CARROT25519_MAINLOOP
 
 	// Final swap for an unconstrained bit 0
 	ldrb	w1, [sp, #104]
@@ -1293,14 +1305,14 @@ mov	v10.d[0], v0.d[1]
 	adr	x10, invtable
 	str	x10, [sp, #160]
 
-.Linvloopnext:
+CARROT25519_INVLOOPNEXT:
 	ldrh	w11, [x10], #2
 	mov	v20.s[0], w11
 	str	x10, [sp, #160]
 
 	and	w12, w11, #0x7f
 	subs	w30, w12, #1 // square times
-	bmi	.Lskipsquare
+	bmi	CARROT25519_SKIPSQUARE
 
 	mov	w23, w3
 	mov	w24, w4
@@ -1312,7 +1324,7 @@ mov	v10.d[0], v0.d[1]
 	add	w11, w1, w1
 	add	w12, w2, w2
 
-.Lsqrloop1:
+CARROT25519_SQRLOOP1:
 	umull	x20, w0, w0
 		add	x4, x24, x23, lsr #25
 	umull	x21, w10, w1
@@ -1422,7 +1434,7 @@ mov	v10.d[0], v0.d[1]
 	umaddl	x26, w16, w17, x26
 		add	x23, x23, x22, lsr #26
 	umaddl	x27, w16, w8, x27
-		bpl	.Lsqrloop1
+		bpl	CARROT25519_SQRLOOP1
 
 	mov	w11, v20.s[0]
 	add	x4, x24, x23, lsr #25
@@ -1437,11 +1449,11 @@ mov	v10.d[0], v0.d[1]
 	and	x7, x7, #0x1ffffff
 	add	x9, x9, x8, lsr #26
 	and	x8, x8, #0x3ffffff
-.Lskipsquare:
+CARROT25519_SKIPSQUARE:
 	mov	w12, #40
 	tst	w11, #1<<8
 	ubfx	w13, w11, #9, #2
-	bne	.Lskipmul
+	bne	CARROT25519_SKIPMUL
 	mul	w20, w13, w12
 	add	x20, sp, x20
 
@@ -1598,9 +1610,9 @@ mov	v10.d[0], v0.d[1]
 	lsr	x7, x24, #32
 	mov	w8, w22
 	lsr	x9, x22, #32
-.Lskipmul:
+CARROT25519_SKIPMUL:
 	ubfx	w12, w11, #11, #2
-	cbz	w12, .Lskipstore
+	cbz	w12, CARROT25519_SKIPSTORE
 	mov	w13, #40
 	mul	w12, w12, w13
 	add	x12, sp, x12
@@ -1610,12 +1622,12 @@ mov	v10.d[0], v0.d[1]
 	stp	w4, w5, [x12, #16]
 	stp	w6, w7, [x12, #24]
 	stp	w8, w9, [x12, #32]
-.Lskipstore:
+CARROT25519_SKIPSTORE:
 
 	ldr	x10, [sp, #160]
 	adr	x11, invtable+13*2
 	cmp	x10, x11
-	bne	.Linvloopnext
+	bne	CARROT25519_INVLOOPNEXT
 
 	// Final reduce
 	// w5 and w9 are 26 bits instead of 25
@@ -1679,15 +1691,36 @@ mov	v10.d[0], v0.d[1]
 	add sp, sp, 192
 
 	ldp	x19, x20, [sp, #16]
+	.cfi_restore x19
+	.cfi_restore x20
 	ldp	x21, x22, [sp, #32]
+	.cfi_restore x21
+	.cfi_restore x22
 	ldp	x23, x24, [sp, #48]
+	.cfi_restore x23
+	.cfi_restore x24
 	ldp	x25, x26, [sp, #64]
+	.cfi_restore x25
+	.cfi_restore x26
 	ldp	x27, x28, [sp, #80]
+	.cfi_restore x27
+	.cfi_restore x28
 	ldp	d8, d9, [sp, #96]
+	.cfi_restore d8
+	.cfi_restore d9
 	ldp	d10, d11, [sp, #112]
+	.cfi_restore d10
+	.cfi_restore d11
 	ldp	d12, d13, [sp, #128]
+	.cfi_restore d12
+	.cfi_restore d13
 	ldp	d14, d15, [sp, #144]
+	.cfi_restore d14
+	.cfi_restore d15
 	ldp	x29, x30, [sp], #160
+	.cfi_restore x29
+	.cfi_restore x30
+	.cfi_def_cfa sp, 0
 
 	ret
 	.cfi_endproc
