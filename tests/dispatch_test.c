@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 
 #include "carrot25519.h"
+#include "fixed_base/fixed_base.h"
+#include "internal.h"
 #include "x86_64/x86_64.h"
 
 #include <stddef.h>
@@ -28,6 +30,10 @@ int main(void)
     const int has_fast = carrot25519_x86_64_runtime_has_bmi2_adx();
 
     if (!classifier_is_exact() || baseline == NULL || automatic == NULL ||
+        carrot25519_x86_64_baseline_impl.mul_base !=
+            carrot25519_fixed_base ||
+        carrot25519_x86_64_bmi2_adx_impl.mul_base ==
+            carrot25519_fixed_base ||
         carrot25519_impl_id_of(baseline) !=
             CARROT25519_IMPL_X86_64_BASELINE)
         return 1;

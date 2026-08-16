@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 #include "internal.h"
+#include "fixed_base/fixed_base.h"
 #include "x86_64/x86_64.h"
 
 #include "s2n/s2n-bignum.h"
@@ -83,12 +84,6 @@ static void fast_mul(
         bignum_mul_p25519);
 }
 
-static void baseline_mul_base(uint8_t out[32], const uint8_t scalar[32])
-{
-    static const uint8_t basepoint[32] = {9};
-    baseline_mul(out, scalar, basepoint);
-}
-
 static void fast_mul_base(uint8_t out[32], const uint8_t scalar[32])
 {
     static const uint8_t basepoint[32] = {9};
@@ -98,7 +93,7 @@ static void fast_mul_base(uint8_t out[32], const uint8_t scalar[32])
 const carrot25519_impl carrot25519_x86_64_baseline_impl = {
     CARROT25519_IMPL_X86_64_BASELINE,
     "x86_64/s2n-baseline",
-    baseline_mul_base,
+    carrot25519_fixed_base,
     baseline_mul};
 
 const carrot25519_impl carrot25519_x86_64_bmi2_adx_impl = {

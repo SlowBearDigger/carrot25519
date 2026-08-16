@@ -273,6 +273,8 @@ if(CARROT25519_BUILD_TESTS)
   if(CARROT25519_TARGET_X86_64)
     add_executable(carrot25519_x86_64_dispatch_test tests/dispatch_test.c)
     target_include_directories(carrot25519_x86_64_dispatch_test PRIVATE src)
+    target_compile_definitions(carrot25519_x86_64_dispatch_test
+      PRIVATE CARROT25519_HAVE_X86_64=1)
     target_link_libraries(carrot25519_x86_64_dispatch_test PRIVATE carrot25519)
     carrot25519_strict_warnings(carrot25519_x86_64_dispatch_test)
     add_test(NAME x86_64_dispatch COMMAND carrot25519_x86_64_dispatch_test)
