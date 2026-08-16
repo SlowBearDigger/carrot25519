@@ -93,11 +93,12 @@ Each implementation reports `base`, `base-ladder`, and `point`. The first two
 use the same scalars and are measured in alternating order, providing a direct
 fixed-base versus Montgomery-ladder comparison on the same host.
 
-The recorded macOS ARM64 result at commit `8db8fd2` measured medians of
-25.86 us for ARM64 basepoint multiplication and 26.22 us for arbitrary-point
-multiplication. The corresponding portable medians were 41.19 us and 44.72 us.
-See [the raw samples](bench/results/macos-arm64.txt). Benchmarks are
-informational and never decide correctness.
+The recorded macOS ARM64 result at commit `9b7a930` measured fixed-base and
+ladder medians of 24.15 us and 25.69 us on ARM64, a 6.0% latency reduction.
+The portable medians were 24.14 us and 39.46 us, a 38.8% reduction.
+Arbitrary-point medians were 25.68 us and 39.49 us respectively. See
+[the raw samples](bench/results/macos-arm64.txt). Benchmarks are informational
+and never decide correctness.
 
 ### Help test x86_64
 
