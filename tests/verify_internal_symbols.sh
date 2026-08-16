@@ -18,10 +18,10 @@ case "$(uname -s)" in
   Linux)
     symbols=$(readelf -Ws "$archive")
     ! grep -q 'crypto_sign_ed25519_ref10' <<<"$symbols"
-    count=$(awk '$8 ~ /^carrot25519_ref10_/ && $6 == "HIDDEN" { count++ }
+    count=$(awk '$8 ~ /^carrot25519_ref10_/ && $7 != "UND" && $6 == "HIDDEN" { count++ }
                  END { print count + 0 }' <<<"$symbols")
     test "$count" -ge 20
-    non_hidden=$(awk '$8 ~ /^carrot25519_ref10_/ && $6 != "HIDDEN" {
+    non_hidden=$(awk '$8 ~ /^carrot25519_ref10_/ && $7 != "UND" && $6 != "HIDDEN" {
                         count++
                       }
                       END { print count + 0 }' <<<"$symbols")
