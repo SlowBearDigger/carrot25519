@@ -181,6 +181,9 @@ The following are outside this primitive and require separate review:
 - GitHub-hosted Linux x86_64 has GCC and Clang release plus Clang ASan and
   UBSan evidence. GitHub-hosted Linux ARM64 has release, ASan, and UBSan
   evidence on the native ARM64 backend.
+- [CI run 39644838727](https://github.com/SlowBearDigger/carrot25519/actions/runs/39644838727)
+  at `0c0a1e9` passes native Linux ARM64 GCC/Clang release and portable-only
+  tests, GCC ASan/UBSan, and macOS ARM64 tests for the Fiat32 change.
 - Native benchmark run `31805437243` covers GitHub-hosted Linux x86_64, Linux
   ARM64, and macOS ARM64 at clean commit `5885f83`.
 
@@ -191,9 +194,7 @@ toolchain.
 
 ## Known limitations
 
-- The Fiat32 change has local x86_64 arithmetic, alias, guard-page, Release,
-  ASan, and UBSan evidence. Native AArch64 emitted-instruction checks and
-  Cortex-A53/A55 timing qualification for this change remain pending.
+- Cortex-A53/A55 hardware timing qualification remains pending.
 - No independent review has been completed.
 - The ARM64 backend clears its local scratch frame, not registers or external
   system copies.
