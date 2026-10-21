@@ -61,7 +61,7 @@ def check(disassembly: str) -> None:
             count += 1
             if int(address[1], 16) in targets:
                 history = []
-            instruction = line.split("//", 1)[0].strip()
+            instruction = re.split(r"//|;", line, maxsplit=1)[0].strip()
             multiply = re.search(
                 r"\b(?:mul|madd|msub|mneg|smulh|umulh)\s+x(?:[0-9]+|zr),"
                 r"\s*x([0-9]+|zr),\s*x([0-9]+|zr)\b",

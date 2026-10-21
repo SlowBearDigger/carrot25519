@@ -17,6 +17,19 @@ class MultiplyCheck(unittest.TestCase):
     def test_small_constant_multiplier_is_allowed(self) -> None:
         check(archive("mov w1, #0x13\n   4: 9b027c20 mul x0, x1, x2"))
 
+    def test_macho_constant_comment_is_ignored(self) -> None:
+        check(archive(
+            "mov w1, #0x13 ; =19\n   4: 9b027c20 mul x0, x1, x2",
+            "mach-o arm64",
+        ))
+
+    def test_comment_cannot_define_constant(self) -> None:
+        with self.assertRaises(ValueError):
+            check(archive(
+                "add x1, x2, x3 ; mov w1, #0x13\n"
+                "   4: 9b027c20 mul x0, x1, x2"
+            ))
+
     def test_overwritten_constant_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
             check(archive(
