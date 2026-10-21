@@ -40,7 +40,7 @@ def check(disassembly: str) -> None:
         elif active:
             members[active].append(line)
 
-    for lines in members.values():
+    for member, lines in members.items():
         targets = set()
         for line in lines:
             branch = re.search(
@@ -70,7 +70,10 @@ def check(disassembly: str) -> None:
             if multiply and not any(
                 has_small_constant(history, register) for register in multiply.groups()
             ):
-                raise ValueError("unqualified full-width multiply: " + line.strip())
+                context = "\n".join(history[-48:])
+                raise ValueError(
+                    f"{member}: unqualified full-width multiply: {line.strip()}\n{context}"
+                )
             if re.search(
                 r"\b(?:b(?:\.[a-z]+)?|bl|blr|br|ret|cbz|cbnz|tbz|tbnz)(?:\s|$)",
                 instruction,
