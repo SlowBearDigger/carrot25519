@@ -44,8 +44,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      MX25519_COMMIT: e808a6406b254091f4ed83bf8ea35f032da7f0b7
-      MX25519_TREE: 08cf8d6b18e36e7892bde5ddffae212e7a1ae88a
+      MX25519_COMMIT: b6adab39cc16cc5c65b27c98b27e429e8394ed44
+      MX25519_TREE: 0520f6b642347741dd0cb7a6f52dabb68ab960f7
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           git init "$RUNNER_TEMP/mx25519"
-          git -C "$RUNNER_TEMP/mx25519" remote add origin https://github.com/jeffro256/mx25519.git
+          git -C "$RUNNER_TEMP/mx25519" remote add origin https://github.com/tevador/mx25519.git
           git -C "$RUNNER_TEMP/mx25519" fetch --depth=1 origin "$MX25519_COMMIT"
           git -C "$RUNNER_TEMP/mx25519" checkout --detach FETCH_HEAD
           test "$(git -C "$RUNNER_TEMP/mx25519" rev-parse HEAD^{commit})" = "$MX25519_COMMIT"

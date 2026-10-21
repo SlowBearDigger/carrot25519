@@ -152,7 +152,7 @@ static void mx25519_base(
     mx25519_pubkey result;
     (void)point;
     memcpy(key.data, scalar, sizeof(key.data));
-    mx25519_scmul_base(
+    mx25519_scmul_base_unclamped(
         (const mx25519_impl *)implementation, &result, &key);
     memcpy(out, result.data, sizeof(result.data));
 }
@@ -166,7 +166,7 @@ static void mx25519_point(
     mx25519_pubkey result;
     memcpy(key.data, scalar, sizeof(key.data));
     memcpy(input.data, point, sizeof(input.data));
-    mx25519_scmul_key(
+    mx25519_scmul_key_unclamped(
         (const mx25519_impl *)implementation, &result, &key, &input);
     memcpy(out, result.data, sizeof(result.data));
 }

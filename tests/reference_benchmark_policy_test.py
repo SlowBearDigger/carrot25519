@@ -4,9 +4,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MX_COMMIT = "e808a6406b254091f4ed83bf8ea35f032da7f0b7"
-MX_TREE = "08cf8d6b18e36e7892bde5ddffae212e7a1ae88a"
-MX_REPOSITORY = "https://github.com/jeffro256/mx25519.git"
+MX_COMMIT = "b6adab39cc16cc5c65b27c98b27e429e8394ed44"
+MX_TREE = "0520f6b642347741dd0cb7a6f52dabb68ab960f7"
+MX_REPOSITORY = "https://github.com/tevador/mx25519.git"
 
 
 def require(text: str, value: str, location: str) -> None:
@@ -31,8 +31,8 @@ def main() -> None:
         require(cmake, value, "CMakeLists.txt")
 
     for value in (
-        "mx25519_scmul_base",
-        "mx25519_scmul_key",
+        "mx25519_scmul_base_unclamped",
+        "mx25519_scmul_key_unclamped",
         "MX25519_TYPE_PORTABLE",
         "MX25519_TYPE_AMD64",
         "MX25519_TYPE_AMD64X",
