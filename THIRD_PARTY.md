@@ -11,6 +11,7 @@ retain the terms selected below.
 - Selected license: MIT
 - License copy: `licenses/MIT-FIAT.txt`
 - Vendored path: `src/portable/fiat/curve25519_64.c`
+- Vendored path: `src/portable/fiat/curve25519_32.c`
 
 The generated field arithmetic is vendored without local edits.
 

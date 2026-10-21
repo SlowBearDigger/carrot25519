@@ -54,6 +54,7 @@ foreach(pin IN ITEMS
 endforeach()
 
 set(pinned_files
+  "src/portable/fiat/curve25519_32.c|403a8a4431fc85adc030ee0105b694360621cd20de2ae003accafbce661bade1"
   "src/portable/fiat/curve25519_64.c|645233c37707ba0580338aa84d8380357078a2c9bb2db80f0c5ff4e979650e3e"
   "src/arm64/x25519_aarch64.S|2d267ce802f44c839adce339d823bbbe491462b312cdc36e3fa1b3ebc00870e6"
   "src/x86_64/s2n/_internal_s2n_bignum.h|af14486ec593c27670bfa7cb74057e2116b1cf8d9945cc2bdc736b61f2accc96"

@@ -58,6 +58,14 @@ set_target_properties(carrot25519 PROPERTIES
 
 carrot25519_strict_warnings(carrot25519)
 
+if(carrot25519_processor MATCHES "^(arm64|aarch64)$" AND
+   NOT CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+  # Lower optimization levels reintroduce full-width signed products on ARM64.
+  set_property(SOURCE src/portable/portable.c APPEND PROPERTY COMPILE_OPTIONS -O2)
+  set_property(SOURCE src/fixed_base/ref10/ref10.c APPEND PROPERTY
+    COMPILE_OPTIONS -O2 -fwrapv)
+endif()
+
 if(CARROT25519_TARGET_ARM64)
   target_sources(carrot25519 PRIVATE
     src/arm64/arm64.c
@@ -181,6 +189,24 @@ if(CARROT25519_BUILD_TESTS)
   carrot25519_strict_warnings(carrot25519_api_contract_test)
   add_test(NAME api_contract COMMAND carrot25519_api_contract_test)
 
+  if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    add_executable(carrot25519_portable_schedule_test tests/portable_schedule_test.c)
+    target_include_directories(carrot25519_portable_schedule_test PRIVATE src)
+    target_link_libraries(carrot25519_portable_schedule_test PRIVATE carrot25519)
+    target_compile_options(carrot25519_portable_schedule_test PRIVATE
+      -fsanitize-coverage=trace-pc)
+    carrot25519_strict_warnings(carrot25519_portable_schedule_test)
+    add_test(NAME portable_schedule COMMAND carrot25519_portable_schedule_test)
+  endif()
+
+  if(carrot25519_processor MATCHES "^(arm64|aarch64)$" AND UNIX AND
+     NOT CMAKE_OSX_ARCHITECTURES STREQUAL "x86_64")
+    add_test(NAME portable_arm64_multiply
+      COMMAND ${CMAKE_COMMAND} -E env python3
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_portable_arm64.py
+        $<TARGET_FILE:carrot25519> ${CMAKE_OBJDUMP})
+  endif()
+
   add_executable(carrot25519_corpus_test tests/corpus_test.c)
   target_link_libraries(carrot25519_corpus_test PRIVATE carrot25519)
   carrot25519_strict_warnings(carrot25519_corpus_test)
@@ -204,6 +230,16 @@ if(CARROT25519_BUILD_TESTS)
     NAME reference_benchmark_policy
     COMMAND ${CMAKE_COMMAND} -E env
             python3 ${CMAKE_CURRENT_SOURCE_DIR}/tests/reference_benchmark_policy_test.py)
+
+  add_test(NAME portable_arm64_checker
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONDONTWRITEBYTECODE=1 python3
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests/portable_arm64_checker_test.py)
+
+  if(CARROT25519_BUILD_BENCHMARKS AND CARROT25519_BUILD_MX25519_BENCHMARK)
+    add_test(NAME reference_benchmark_parity
+      COMMAND carrot25519_benchmark
+        0000000000000000000000000000000000000000 true 1 1)
+  endif()
 
   add_executable(carrot25519_backend_matrix_test tests/backend_matrix_test.c)
   target_link_libraries(carrot25519_backend_matrix_test PRIVATE carrot25519)
@@ -231,6 +267,12 @@ if(CARROT25519_BUILD_TESTS)
   add_test(NAME fixed_base COMMAND carrot25519_fixed_base_test)
 
   if(UNIX)
+    add_executable(carrot25519_portable_guard_page_test tests/guard_page_test.c)
+    target_compile_definitions(carrot25519_portable_guard_page_test
+      PRIVATE CARROT25519_TEST_IMPL_ID=CARROT25519_IMPL_PORTABLE)
+    target_link_libraries(carrot25519_portable_guard_page_test PRIVATE carrot25519)
+    carrot25519_strict_warnings(carrot25519_portable_guard_page_test)
+    add_test(NAME portable_guard_pages COMMAND carrot25519_portable_guard_page_test)
     add_test(
       NAME internal_symbols
       COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/verify_internal_symbols.sh

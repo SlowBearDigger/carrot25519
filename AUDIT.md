@@ -88,7 +88,7 @@ this wrapper or of compiler and hardware timing behavior.
 
 ## Backend review questions
 
-### Portable Fiat 5x51
+### Portable Fiat (10 limbs on AArch64, 5x51 elsewhere)
 
 - Is the 255-step ladder correct for all scalar bits, including an odd scalar?
 - Is the final conditional swap present and correctly polarized?
@@ -96,12 +96,17 @@ this wrapper or of compiler and hardware timing behavior.
 - Does inversion of zero produce the documented all-zero encoding?
 - Are field bounds valid for every generated Fiat-Crypto call?
 - Are compiler-emitted branches and memory accesses independent of secrets?
+- Does AArch64 compilation use widening 32-bit products, allowing full-width
+  multiplies only when one operand is an established small constant?
+- Does squaring through field multiplication preserve the Fiat input bounds?
 
 ### Fixed-base ref10
 
 - Does the scalar mask ignore only bit 255 before fixed-window recoding?
 - Is every table selection performed by a full constant-schedule scan and
   conditional move, without a scalar-derived address?
+- Do the AArch64 source flags `-O2 -fwrapv` preserve signed 32-bit
+  precomputations, including builds whose remaining objects use `-O0` or `-Os`?
 - Is the Edwards-to-Montgomery map `(Z + Y) / (Z - Y)` correct, including the
   identity and zero-denominator convention?
 - Does exact output and scalar aliasing remain safe?
@@ -160,6 +165,11 @@ The following are outside this primitive and require separate review:
   exact aliases.
 - Disassembly gates inspect the ARM64 scratch wipe and x86_64 instruction and
   symbol boundaries.
+- The portable AArch64 multiply gate rejects full-width products unless one
+  operand is a small constant established within the current straight-line
+  instruction sequence. GCC trace-pc tests compare executed
+  control flow for point-reduction boundaries and several secret scalars;
+  these are instruction/control-flow checks, not hardware timing proofs.
 - The fixed-base regression checks 6,144 scalar cases against the independent
   Montgomery ladder, including exact aliases and bit 255 invariance.
 - Provenance checks pin every vendored cryptographic source and the corpus.
@@ -181,6 +191,9 @@ toolchain.
 
 ## Known limitations
 
+- The Fiat32 change has local x86_64 arithmetic, alias, guard-page, Release,
+  ASan, and UBSan evidence. Native AArch64 emitted-instruction checks and
+  Cortex-A53/A55 timing qualification for this change remain pending.
 - No independent review has been completed.
 - The ARM64 backend clears its local scratch frame, not registers or external
   system copies.
