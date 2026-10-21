@@ -108,6 +108,9 @@ implementation. See [the raw samples](bench/results/linux-x86_64-fixed-base.txt)
 
 ### Help test x86_64
 
+The [local AMD comparison](bench/results/README.md#current-mx25519-comparison)
+records matching outputs and raw samples against tevador/mx25519.
+
 The [mx25519 comparison run](https://github.com/SlowBearDigger/carrot25519/actions/runs/31843055542)
 checks byte-identical outputs before timing both libraries in the same process.
 To reproduce it, fork this repository, enable Actions, open the
