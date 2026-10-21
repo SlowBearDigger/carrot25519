@@ -23,6 +23,19 @@ class MultiplyCheck(unittest.TestCase):
             "mach-o arm64",
         ))
 
+    def test_constant_survives_read_only_arithmetic_uses(self) -> None:
+        check(archive(
+            "mov w8, #0x13\n   4: 1b087c41 mul w1, w2, w8\n"
+            "   8: 9b084de8 madd x8, x15, x8, x19"
+        ))
+
+    def test_memory_writeback_invalidates_constant(self) -> None:
+        with self.assertRaises(ValueError):
+            check(archive(
+                "mov w1, #0x13\n   4: f8408420 ldr x0, [x1], #8\n"
+                "   8: 9b027c20 mul x0, x1, x2"
+            ))
+
     def test_comment_cannot_define_constant(self) -> None:
         with self.assertRaises(ValueError):
             check(archive(
@@ -61,8 +74,9 @@ class MultiplyCheck(unittest.TestCase):
             ))
 
     def test_full_width_constant_is_rejected(self) -> None:
-        with self.assertRaises(ValueError):
-            check(archive("mov x1, #0x100000000\n   4: 9b027c20 mul x0, x1, x2"))
+        for constant in ("0x100000000", "0xfffffffffc000000"):
+            with self.subTest(constant=constant), self.assertRaises(ValueError):
+                check(archive(f"mov x1, #{constant}\n   4: 9b027c20 mul x0, x1, x2"))
 
     def test_signed_operands_are_rejected(self) -> None:
         with self.assertRaises(ValueError):

@@ -20,7 +20,16 @@ def has_small_constant(history: list[str], register: str) -> bool:
                 rf"\bmov\s+[wx]{register},\s*#(0x[0-9a-f]+|[0-9]+)\s*$",
                 instruction,
             )
-            return constant is not None and int(constant[1], 0) <= 0xffffffff
+            if constant is not None:
+                return int(constant[1], 0) <= 0xffffffff
+            arithmetic = re.search(
+                r"\b(?:mov|add|adds|sub|subs|and|orr|eor|lsl|lsr|asr|"
+                r"mul|madd|msub|smull|smaddl|umull|umaddl)\s+[wx]([0-9]+|zr),",
+                instruction,
+            )
+            if arithmetic is not None and arithmetic[1] != register:
+                continue
+            return False
     return False
 
 
