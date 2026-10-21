@@ -26,7 +26,7 @@ or 2, and it does not force scalar bit 254.
 
 | ID | Name | Availability |
 |---|---|---|
-| `PORTABLE` | `portable/fiat51` | Portable C fallback |
+| `PORTABLE` | `portable/fiat25.5` on AArch64, `portable/fiat51` elsewhere | Portable C fallback |
 | `ARM64` | `arm64/cc0` | macOS ARM64 and Linux AArch64 |
 | `X86_64_BASELINE` | `x86_64/s2n-baseline` | Baseline x86_64 |
 | `X86_64_BMI2_ADX` | `x86_64/s2n-bmi2-adx` | x86_64 with both BMI2 and ADX |
@@ -35,6 +35,13 @@ or 2, and it does not force scalar bit 254.
 features are reported by CPUID, otherwise it selects the baseline backend.
 Unsupported explicit selections return `NULL`. Set
 `CARROT25519_PORTABLE_ONLY=ON` to disable optimized backends.
+
+The AArch64 portable ladder uses pinned 32-bit Fiat-Crypto arithmetic and
+reuses field multiplication for squaring. The portable and ref10 objects use
+`-O2` on AArch64, including Debug builds; ref10 also uses `-fwrapv` to retain
+32-bit precomputations before widening products. Point decoding uses
+unconditional subtraction and masked selection. Native ARM64 tests inspect
+the emitted multiplication instructions, including portable-only builds.
 
 Portable, ARM64, and baseline x86_64 basepoint multiplication use a
 constant-schedule ref10 fixed-base table. Arbitrary-point multiplication

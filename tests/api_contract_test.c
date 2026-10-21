@@ -35,7 +35,12 @@ int main(void)
         return 1;
     if (carrot25519_impl_id_of(portable) != CARROT25519_IMPL_PORTABLE)
         return 1;
-    if (strcmp(carrot25519_impl_name(portable), "portable/fiat51") != 0)
+#if defined(__aarch64__) || defined(__arm64__)
+    const char *portable_name = "portable/fiat25.5";
+#else
+    const char *portable_name = "portable/fiat51";
+#endif
+    if (strcmp(carrot25519_impl_name(portable), portable_name) != 0)
         return 1;
     if (carrot25519_select_impl((carrot25519_impl_id)UINT32_MAX) != NULL)
         return 1;
